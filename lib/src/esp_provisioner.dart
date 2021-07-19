@@ -176,7 +176,7 @@ class EspProvisioner {
       return;
     }
 
-    final pkg = EspProvisioningPackage(request, p);
+    final pkg = EspProvisioningPackage(request, p, logger: _logger);
 
     _logger.verbose("blocks");
     _logger.verbose(pkg.blocks.map((e) => e.length));

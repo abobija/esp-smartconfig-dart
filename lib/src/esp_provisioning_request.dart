@@ -30,26 +30,6 @@ class EspProvisioningRequest {
     _validate();
   }
 
-  void _validate() {
-    if (ssid.length > ssidLengthMax) {
-      throw ArgumentError("SSID length is greater than $ssidLengthMax");
-    }
-
-    if (bssid.length != bssidLength) {
-      throw ArgumentError(
-          "Invalid BSSID. Length should be $bssidLength. Got ${bssid.length}");
-    }
-
-    if (password != null && password!.length > passwordLengthMax) {
-      throw ArgumentError("Password length is greater than $passwordLengthMax");
-    }
-
-    if (reservedData != null && reservedData!.length > reservedDataLengthMax) {
-      throw ArgumentError(
-          "ReservedData length is greater than $reservedDataLengthMax");
-    }
-  }
-
   /// Create request from string values
   ///
   /// [bssid] shoud be in format xx:xx:xx:xx:xx:xx
@@ -69,5 +49,25 @@ class EspProvisioningRequest {
           ? null
           : Int8List.fromList(utf8.encode(reservedData)),
     );
+  }
+
+  void _validate() {
+    if (ssid.length > ssidLengthMax) {
+      throw ArgumentError("SSID length is greater than $ssidLengthMax");
+    }
+
+    if (bssid.length != bssidLength) {
+      throw ArgumentError(
+          "Invalid BSSID. Length should be $bssidLength. Got ${bssid.length}");
+    }
+
+    if (password != null && password!.length > passwordLengthMax) {
+      throw ArgumentError("Password length is greater than $passwordLengthMax");
+    }
+
+    if (reservedData != null && reservedData!.length > reservedDataLengthMax) {
+      throw ArgumentError(
+          "ReservedData length is greater than $reservedDataLengthMax");
+    }
   }
 }

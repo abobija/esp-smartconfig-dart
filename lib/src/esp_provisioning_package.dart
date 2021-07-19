@@ -3,8 +3,10 @@ import 'dart:typed_data';
 import 'package:esp_smartconfig/esp_smartconfig.dart';
 import 'package:esp_smartconfig/src/esp_provisioner.dart';
 import 'package:esp_smartconfig/src/esp_provisioning_crc.dart';
+import 'package:loggerx/loggerx.dart';
 
 class EspProvisioningPackage {
+  late Logger _logger;
   final EspProvisioningRequest request;
   final int portIndex;
 
@@ -47,7 +49,8 @@ class EspProvisioningPackage {
     _reservedPaddingFactor = value ? 5 : 6;
   }
 
-  EspProvisioningPackage(this.request, this.portIndex) {
+  EspProvisioningPackage(this.request, this.portIndex, { required Logger logger }) {
+    _logger = logger;
     _parse();
   }
 
@@ -59,17 +62,23 @@ class EspProvisioningPackage {
     if (request.password != null) {
       _passwordLength = request.password!.length;
       dataTmp.addAll(request.password!);
-      final padding = _padding(_passwordPaddingFactor, request.password);
-      _passwordPaddingLength = padding.length;
-      dataTmp.addAll(padding);
+
+      if(_isPasswordEncoded || _isReservedDataEncoded) {
+        final padding = _padding(_passwordPaddingFactor, request.password);
+        _passwordPaddingLength = padding.length;
+        dataTmp.addAll(padding);
+      }
     }
 
     if (request.reservedData != null) {
       _reservedDataLength = request.reservedData!.length;
       dataTmp.addAll(request.reservedData!);
-      final padding = _padding(_reservedPaddingFactor, request.reservedData);
-      _reservedDataPaddingLength = padding.length;
-      dataTmp.addAll(padding);
+
+      if(_isPasswordEncoded || _isReservedDataEncoded) {
+        final padding = _padding(_reservedPaddingFactor, request.reservedData);
+        _reservedDataPaddingLength = padding.length;
+        dataTmp.addAll(padding);
+      }
     }
 
     dataTmp.addAll(request.ssid);
@@ -78,7 +87,13 @@ class EspProvisioningPackage {
     _buffer = Int8List.fromList(dataTmp);
     dataTmp.clear();
 
-    //debugLog("package_buffer $_buffer");
+    _logger.verbose(
+      "paddings "
+      "password=$_passwordPaddingLength, "
+      "reserved_data=$_reservedDataPaddingLength"
+    );
+
+    _logger.debug("package buffer $_buffer");
 
     int reservedDataBeginPos =
         _headLength + _passwordLength + _passwordPaddingLength;
@@ -130,7 +145,7 @@ class EspProvisioningPackage {
 
   void _createBlocksFor6Bytes(
       Int8List buf, int sequence, int crc, bool tailIsCrc) {
-    //debugLog("buf=$buf, seq=$sequence, crc=$crc, tailIsCrc=$tailIsCrc");
+    _logger.verbose("buf=$buf, seq=$sequence, crc=$crc, tailIsCrc=$tailIsCrc");
 
     if (sequence == -1) {
       // first sequence
@@ -202,7 +217,7 @@ class EspProvisioningPackage {
 
     headTmp.add(EspProvisioningCrc.calculate(request.bssid));
 
-    final flag = (1) // bit0      : 1-ipv4, 0-ipv6
+    final flag = (1) // bit0 : 1-ipv4, 0-ipv6
         |
         ((0) << 1) // bit1 bit2 : 00-no crypt, 01-crypt
         |
