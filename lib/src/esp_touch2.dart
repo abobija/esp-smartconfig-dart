@@ -99,9 +99,9 @@ class EspTouch2 extends EspProvisioningProtocol {
 
     logger.verbose("paddings "
         "password=$_passwordPaddingLength, "
-        "reserved_data=$_reservedDataPaddingLength");
+        "reservedData=$_reservedDataPaddingLength");
 
-    logger.debug("package buffer $_buffer");
+    logger.debug("buffer $_buffer");
 
     int reservedDataBeginPos =
         _headLength + _passwordLength + _passwordPaddingLength;
@@ -166,7 +166,7 @@ class EspTouch2 extends EspProvisioningProtocol {
     } else {
       _blockPointer = 0;
 
-      logger.verbose("Package with ${_blocks.length} blocks was sent");
+      logger.verbose("${_blocks.length} blocks has been sent");
 
       if (_intervalMs != _slowIntervalMs &&
           timer.tick * stepMs >= _slowIntervalThresholdMs) {
@@ -234,7 +234,8 @@ class EspTouch2 extends EspProvisioningProtocol {
 
   void _createBlocksFor6Bytes(
       Int8List buf, int sequence, int crc, bool tailIsCrc) {
-    logger.verbose("buf=$buf, seq=$sequence, crc=$crc, tailIsCrc=$tailIsCrc");
+    logger.verbose(
+        "seq=$sequence, seqBuffer=$buf, crc=$crc, tailIsCrc=$tailIsCrc");
 
     if (sequence == -1) {
       // first sequence
