@@ -12,9 +12,9 @@ class EspProvisioningPackage {
 
   late Int8List _buffer;
 
-  final _blocks = <Int8List>[];
+  final _blocks = <int>[];
 
-  List<Int8List> get blocks => _blocks;
+  List<int> get blocks => _blocks;
 
   var _isSsidEncoded = false;
   var _isPasswordEncoded = false;
@@ -150,13 +150,12 @@ class EspProvisioningPackage {
     if (sequence == -1) {
       // first sequence
       final syncBlock = _syncBlock();
-      final seqSizeBlock = Int8List(0);
 
       _blocks.addAll([
         syncBlock,
-        seqSizeBlock,
+        0,
         syncBlock,
-        seqSizeBlock,
+        0,
       ]);
     } else {
       final seqBlock = _seqBlock(sequence);
@@ -188,11 +187,10 @@ class EspProvisioningPackage {
     _blocks[1] = _blocks[3] = _seqSizeBlock(size);
   }
 
-  Int8List _syncBlock() => Int8List(1048);
-  Int8List _seqSizeBlock(int size) => Int8List(1072 + size - 1);
-  Int8List _seqBlock(int seq) => Int8List(128 + seq);
-  Int8List _dataBlock(int data, int idx) =>
-      Int8List((idx << 7) | (1 << 6) | data);
+  int _syncBlock() => 1048;
+  int _seqSizeBlock(int size) => 1072 + size - 1;
+  int _seqBlock(int seq) => 128 + seq;
+  int _dataBlock(int data, int idx) => ((idx << 7) | (1 << 6) | data);
 
   Int8List _head() {
     final headTmp = <int>[];

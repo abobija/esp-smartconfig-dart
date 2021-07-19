@@ -178,8 +178,7 @@ class EspProvisioner {
 
     final pkg = EspProvisioningPackage(request, p, logger: _logger);
 
-    _logger.verbose("blocks");
-    _logger.verbose(pkg.blocks.map((e) => e.length));
+    _logger.verbose("blocks ${pkg.blocks}");
 
     InternetAddress broadcastAddress = InternetAddress.fromRawAddress(
         Uint8List.fromList([255, 255, 255, 255]));
@@ -200,7 +199,7 @@ class EspProvisioner {
       counter = 0;
 
       if (blockIdx < pkg.blocks.length) {
-        _socket!.send(pkg.blocks[blockIdx++], broadcastAddress, _devicePort);
+        _socket!.send(Int8List(pkg.blocks[blockIdx++]), broadcastAddress, _devicePort);
       } else {
         blockIdx = 0;
 
