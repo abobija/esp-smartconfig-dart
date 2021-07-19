@@ -180,7 +180,7 @@ class EspTouch2 extends EspProvisioningProtocol {
   EspProvisioningResponse receive(Uint8List data) {
     if (data.length < 7) {
       throw EspProvisioningException(
-          "Invalid data ($data). Length should at least 7 elements");
+          "Invalid data ($data). Length should be at least 7 elements");
     }
 
     final deviceBssid = Uint8List(6);
