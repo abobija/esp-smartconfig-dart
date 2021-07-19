@@ -9,14 +9,12 @@ void main() async {
   final provisioner = EspProvisioner();
 
   provisioner.onResponse.listen((response) {
-    log.info(
-      "\n"
-      "\n---------------------------------------------------------\n"
-      "Device ${response.deviceBssid} is connected to WiFi!"
-      "\n---------------------------------------------------------\n"
-    );
+    log.info("\n"
+        "\n---------------------------------------------------------\n"
+        "Device ${response.deviceBssid} is connected to WiFi!"
+        "\n---------------------------------------------------------\n");
   });
-  
+
   try {
     await provisioner.start(EspProvisioningRequest.fromStrings(
       ssid: "Renault 1.9D",

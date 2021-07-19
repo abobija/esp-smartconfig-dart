@@ -35,7 +35,7 @@ class EspProvisioner {
       _onDeviceConnectedCtrl.stream;
 
   /// Constructor for new EspProvisioner
-  /// 
+  ///
   /// [protocol] - Provisioning protocol (default is EspTouchV2)
   EspProvisioner({this.protocol = EspSmartConfigProtocol.espTouchV2});
 
