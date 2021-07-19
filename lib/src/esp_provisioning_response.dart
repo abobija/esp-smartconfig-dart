@@ -30,4 +30,7 @@ class EspProvisioningResponse {
 
   @override
   int get hashCode => super.hashCode;
+
+  @override
+  String toString() => "$deviceBssid";
 }

@@ -1,20 +1,31 @@
+import 'dart:io';
+import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:esp_smartconfig/esp_smartconfig.dart';
-import 'package:esp_smartconfig/src/esp_provisioner.dart';
 import 'package:esp_smartconfig/src/esp_provisioning_crc.dart';
-import 'package:loggerx/loggerx.dart';
+import 'package:esp_smartconfig/src/esp_provisioning_exception.dart';
+import 'package:esp_smartconfig/src/esp_provisioning_protocol.dart';
+import 'package:esp_smartconfig/src/esp_provisioning_request.dart';
+import 'package:esp_smartconfig/src/esp_provisioning_response.dart';
+import 'package:loggerx/src/logger.dart';
 
-class EspProvisioningPackage {
-  late Logger _logger;
-  final EspProvisioningRequest request;
-  final int portIndex;
+class EspTouch2 extends EspProvisioningProtocol {
+  static final version = 0;
+
+  static final _defaultSendIntervalMs =
+      Duration(milliseconds: 15).inMilliseconds;
+  static final _slowIntervalMs = Duration(milliseconds: 100).inMilliseconds;
+  static final _slowIntervalThresholdMs = Duration(seconds: 20).inMilliseconds;
+
+  @override
+  List<int> get ports => [18266, 28266, 38266, 48266];
+
+  int _stepCounter = 0;
+  int _intervalMs = _defaultSendIntervalMs;
 
   late Int8List _buffer;
-
+  int _blockPointer = 0;
   final _blocks = <int>[];
-
-  List<int> get blocks => _blocks;
 
   var _isSsidEncoded = false;
   var _isPasswordEncoded = false;
@@ -49,12 +60,11 @@ class EspProvisioningPackage {
     _reservedPaddingFactor = value ? 5 : 6;
   }
 
-  EspProvisioningPackage(this.request, this.portIndex, { required Logger logger }) {
-    _logger = logger;
-    _parse();
-  }
+  @override
+  void setup(RawDatagramSocket socket, int portIndex,
+      EspProvisioningRequest request, Logger logger) {
+    super.setup(socket, portIndex, request, logger);
 
-  void _parse() {
     final dataTmp = <int>[];
 
     dataTmp.addAll(_head());
@@ -63,7 +73,7 @@ class EspProvisioningPackage {
       _passwordLength = request.password!.length;
       dataTmp.addAll(request.password!);
 
-      if(_isPasswordEncoded || _isReservedDataEncoded) {
+      if (_isPasswordEncoded || _isReservedDataEncoded) {
         final padding = _padding(_passwordPaddingFactor, request.password);
         _passwordPaddingLength = padding.length;
         dataTmp.addAll(padding);
@@ -74,7 +84,7 @@ class EspProvisioningPackage {
       _reservedDataLength = request.reservedData!.length;
       dataTmp.addAll(request.reservedData!);
 
-      if(_isPasswordEncoded || _isReservedDataEncoded) {
+      if (_isPasswordEncoded || _isReservedDataEncoded) {
         final padding = _padding(_reservedPaddingFactor, request.reservedData);
         _reservedDataPaddingLength = padding.length;
         dataTmp.addAll(padding);
@@ -87,13 +97,11 @@ class EspProvisioningPackage {
     _buffer = Int8List.fromList(dataTmp);
     dataTmp.clear();
 
-    _logger.verbose(
-      "paddings "
-      "password=$_passwordPaddingLength, "
-      "reserved_data=$_reservedDataPaddingLength"
-    );
+    logger.verbose("paddings "
+        "password=$_passwordPaddingLength, "
+        "reserved_data=$_reservedDataPaddingLength");
 
-    _logger.debug("package buffer $_buffer");
+    logger.debug("package buffer $_buffer");
 
     int reservedDataBeginPos =
         _headLength + _passwordLength + _passwordPaddingLength;
@@ -141,11 +149,92 @@ class EspProvisioningPackage {
     }
 
     _updateBlocksForSequencesLength(count);
+
+    logger.verbose("blocks ${_blocks}");
+  }
+
+  @override
+  void loop(int stepMs, Timer timer) {
+    if (++_stepCounter * stepMs < _intervalMs) {
+      return;
+    }
+
+    _stepCounter = 0;
+
+    if (_blockPointer < _blocks.length) {
+      send(Int8List(_blocks[_blockPointer++]));
+    } else {
+      _blockPointer = 0;
+
+      logger.verbose("Package with ${_blocks.length} blocks was sent");
+
+      if (_intervalMs != _slowIntervalMs &&
+          timer.tick * stepMs >= _slowIntervalThresholdMs) {
+        _intervalMs = _slowIntervalMs;
+        logger.debug("Switched to slow interval of ${_slowIntervalMs}ms");
+      }
+    }
+  }
+
+  @override
+  EspProvisioningResponse receive(Uint8List data) {
+    if (data.length < 7) {
+      throw EspProvisioningException(
+          "Invalid data ($data). Length should at least 7 elements");
+    }
+
+    final deviceBssid = Uint8List(6);
+    deviceBssid.setAll(0, data.skip(1).take(6));
+
+    return EspProvisioningResponse(deviceBssid);
+  }
+
+  Int8List _head() {
+    final headTmp = <int>[];
+
+    isSsidEncoded = _isDataEncoded(request.ssid);
+    headTmp.add(request.ssid.length | (_isSsidEncoded ? 0x80 : 0));
+
+    if (request.password == null) {
+      headTmp.add(0);
+    } else {
+      isPasswordEncoded = _isDataEncoded(request.password!);
+      headTmp.add(request.password!.length | (_isPasswordEncoded ? 0x80 : 0));
+    }
+
+    if (request.reservedData == null) {
+      headTmp.add(0);
+    } else {
+      isReservedDataEncoded = _isDataEncoded(request.reservedData!);
+      headTmp.add(
+          request.reservedData!.length | (_isReservedDataEncoded ? 0x80 : 0));
+    }
+
+    headTmp.add(EspProvisioningCrc.calculate(request.bssid));
+
+    final flag = (1) // bit0 : 1-ipv4, 0-ipv6
+        |
+        ((0) << 1) // bit1 bit2 : 00-no crypt, 01-crypt
+        |
+        ((portIndex & 0x03) << 3) // bit3 bit4 : app port
+        |
+        ((EspTouch2.version & 0x03) << 6); // bit6 bit7 : version
+
+    headTmp.add(flag);
+
+    headTmp.add(EspProvisioningCrc.calculate(Int8List.fromList(headTmp)));
+    _headLength = headTmp.length;
+
+    return Int8List.fromList(headTmp);
+  }
+
+  void _updateBlocksForSequencesLength(int size) {
+    _blocks[1] = _blocks[3] = _seqSizeBlock(size);
   }
 
   void _createBlocksFor6Bytes(
       Int8List buf, int sequence, int crc, bool tailIsCrc) {
-    _logger.verbose("buf=$buf, seq=$sequence, crc=$crc, tailIsCrc=$tailIsCrc");
+    logger.verbose("buf=$buf, seq=$sequence, crc=$crc, tailIsCrc=$tailIsCrc");
 
     if (sequence == -1) {
       // first sequence
@@ -183,60 +272,17 @@ class EspProvisioningPackage {
     }
   }
 
-  void _updateBlocksForSequencesLength(int size) {
-    _blocks[1] = _blocks[3] = _seqSizeBlock(size);
-  }
-
   int _syncBlock() => 1048;
   int _seqSizeBlock(int size) => 1072 + size - 1;
   int _seqBlock(int seq) => 128 + seq;
   int _dataBlock(int data, int idx) => ((idx << 7) | (1 << 6) | data);
-
-  Int8List _head() {
-    final headTmp = <int>[];
-
-    isSsidEncoded = _isEncoded(request.ssid);
-    headTmp.add(request.ssid.length | (_isSsidEncoded ? 0x80 : 0));
-
-    if (request.password == null) {
-      headTmp.add(0);
-    } else {
-      isPasswordEncoded = _isEncoded(request.password!);
-      headTmp.add(request.password!.length | (_isPasswordEncoded ? 0x80 : 0));
-    }
-
-    if (request.reservedData == null) {
-      headTmp.add(0);
-    } else {
-      isReservedDataEncoded = _isEncoded(request.reservedData!);
-      headTmp.add(
-          request.reservedData!.length | (_isReservedDataEncoded ? 0x80 : 0));
-    }
-
-    headTmp.add(EspProvisioningCrc.calculate(request.bssid));
-
-    final flag = (1) // bit0 : 1-ipv4, 0-ipv6
-        |
-        ((0) << 1) // bit1 bit2 : 00-no crypt, 01-crypt
-        |
-        ((portIndex & 0x03) << 3) // bit3 bit4 : app port
-        |
-        ((EspProvisioner.version & 0x03) << 6); // bit6 bit7 : version
-
-    headTmp.add(flag);
-
-    headTmp.add(EspProvisioningCrc.calculate(Int8List.fromList(headTmp)));
-    _headLength = headTmp.length;
-
-    return Int8List.fromList(headTmp);
-  }
 
   Int8List _padding(int factor, Int8List? data) {
     int length = factor - (data == null ? 0 : data.length) % factor;
     return Int8List(length < factor ? length : 0);
   }
 
-  bool _isEncoded(Int8List data) {
+  bool _isDataEncoded(Int8List data) {
     for (var b in data) {
       if (b < 0) {
         return true;
