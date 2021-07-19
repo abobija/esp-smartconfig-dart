@@ -11,7 +11,7 @@ void main() async {
   provisioner.onResponse.listen((response) {
     log.info("\n"
         "\n---------------------------------------------------------\n"
-        "Device ${response.deviceBssid} is connected to WiFi!"
+        "Device (bssid=${response.deviceBssidString}) is connected to WiFi!"
         "\n---------------------------------------------------------\n");
   });
 

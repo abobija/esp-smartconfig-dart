@@ -7,10 +7,16 @@ class EspProvisioningResponse {
   /// Connected device BSSID
   final Uint8List deviceBssid;
 
+  /// Friendly representation of [deviceBssid] in format xx:xx:xx:xx:xx:xx
+  late final String deviceBssidString;
+
   EspProvisioningResponse(this.deviceBssid) {
     if (deviceBssid.length != EspProvisioningRequest.bssidLength) {
       throw ArgumentError("Invalid BSSID");
     }
+
+    deviceBssidString =
+        deviceBssid.map((b) => b.toRadixString(16).padLeft(2, '0')).join(':');
   }
 
   /// Equality by using [deviceBssid]
