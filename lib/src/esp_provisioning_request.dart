@@ -37,7 +37,7 @@ class EspProvisioningRequest {
 
   /// Create request from string values
   ///
-  /// [bssid] shoud be in format xx:xx:xx:xx:xx:xx
+  /// [bssid] shoud be in format aa:bb:cc:dd:ee:ff
   factory EspProvisioningRequest.fromStrings({
     required String ssid,
     required String bssid,

@@ -7,7 +7,7 @@ class EspProvisioningResponse {
   /// Connected device BSSID
   final Uint8List deviceBssid;
 
-  /// Friendly representation of [deviceBssid] in format xx:xx:xx:xx:xx:xx
+  /// Friendly representation of [deviceBssid] in format aa:bb:cc:dd:ee:ff
   late final String deviceBssidString;
 
   EspProvisioningResponse(this.deviceBssid) {
