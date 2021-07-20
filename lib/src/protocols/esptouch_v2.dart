@@ -24,7 +24,6 @@ class EspTouchV2 extends Protocol {
 
   late Int8List _buffer;
   int _blockPointer = 0;
-  final _blocks = <int>[];
 
   var _isSsidEncoded = false;
   var _isPasswordEncoded = false;
@@ -185,8 +184,6 @@ class EspTouchV2 extends Protocol {
     }
 
     _updateBlocksForSequencesLength(count);
-
-    logger.verbose("blocks ${_blocks}");
   }
 
   @override
@@ -197,12 +194,12 @@ class EspTouchV2 extends Protocol {
 
     _stepCounter = 0;
 
-    if (_blockPointer < _blocks.length) {
-      send(Int8List(_blocks[_blockPointer++]));
+    if (_blockPointer < blocks.length) {
+      send(Int8List(blocks[_blockPointer++]));
     } else {
       _blockPointer = 0;
 
-      logger.verbose("${_blocks.length} blocks has been sent");
+      logger.verbose("${blocks.length} blocks has been sent");
 
       if (_intervalMs != _slowIntervalMs &&
           timer.tick * stepMs >= _slowIntervalThresholdMs) {
@@ -265,7 +262,7 @@ class EspTouchV2 extends Protocol {
   }
 
   void _updateBlocksForSequencesLength(int size) {
-    _blocks[1] = _blocks[3] = _seqSizeBlock(size);
+    blocks[1] = blocks[3] = _seqSizeBlock(size);
   }
 
   void _createBlocksFor6Bytes(
@@ -277,7 +274,7 @@ class EspTouchV2 extends Protocol {
       // first sequence
       final syncBlock = _syncBlock();
 
-      _blocks.addAll([
+      blocks.addAll([
         syncBlock,
         0,
         syncBlock,
@@ -286,7 +283,7 @@ class EspTouchV2 extends Protocol {
     } else {
       final seqBlock = _seqBlock(sequence);
 
-      _blocks.addAll([
+      blocks.addAll([
         seqBlock,
         seqBlock,
         seqBlock,
@@ -301,11 +298,11 @@ class EspTouchV2 extends Protocol {
           ((buf[1] >> bit & 1) << 4) |
           ((buf[0] >> bit & 1) << 5);
 
-      _blocks.add(_dataBlock(data, bit));
+      blocks.add(_dataBlock(data, bit));
     }
 
     if (tailIsCrc) {
-      _blocks.add(_dataBlock(crc, 7));
+      blocks.add(_dataBlock(crc, 7));
     }
   }
 

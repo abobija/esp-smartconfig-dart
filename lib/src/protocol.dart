@@ -36,6 +36,8 @@ abstract class Protocol {
   /// the [portIndex] of opened port
   List<int> get ports;
 
+  final blocks = <int>[];
+
   final _responsesList = <ProvisioningResponse>[];
 
   /// Protocol setup.
@@ -84,6 +86,16 @@ abstract class Protocol {
   /// Sends a data [buffer]
   int send(List<int> buffer) {
     return _socket.send(buffer, broadcastAddress, devicePort);
+  }
+
+  /// Cast signed byte [s8] to unsigned byte [u8]
+  int u8(int s8) {
+    return s8 & 0xFF;
+  }
+
+  /// Cast signed 16 bit integer [s16] into unsigned 16 bit integer [u16]
+  int u16(int s16) {
+    return s16 & 0xFFFF;
   }
 
   /// Returns [data] CRC

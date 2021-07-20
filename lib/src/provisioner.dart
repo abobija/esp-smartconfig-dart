@@ -187,6 +187,8 @@ class Provisioner {
     }
 
     protocol.setup(_socket, p, request, _logger);
+    
+    _logger.verbose("blocks ${protocol.blocks}");
 
     int stepMs = 5;
     Timer.periodic(

@@ -4,9 +4,9 @@ import 'package:esp_smartconfig/esp_smartconfig.dart';
 import 'package:loggerx/loggerx.dart';
 
 void main() async {
-  logging.level = LogLevel.verbose;
+  logging.level = LogLevel.debug;
 
-  final provisioner = Provisioner.espTouch();
+  final provisioner = Provisioner.espTouchV2();
 
   provisioner.onResponse.listen((response) {
     log.info("\n"
@@ -20,6 +20,7 @@ void main() async {
       ssid: "Renault 1.9D",
       bssid: "f8:d1:11:bf:28:5c",
       password: "renault19",
+      reservedData: "Hello from Dart",
     ));
 
     await Future.delayed(Duration(seconds: 5));
