@@ -20,6 +20,7 @@ void main() async {
       ssid: "Renault 1.9D",
       bssid: "f8:d1:11:bf:28:5c",
       password: "renault19",
+      encryptionKey: "MySecretKey!6754",
     ));
 
     await Future.delayed(Duration(seconds: 5));

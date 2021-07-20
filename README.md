@@ -4,11 +4,15 @@
 
 The SmartConfig<sup>TM</sup> is a provisioning technology to connect a new Wi-Fi device to a Wi-Fi network.
 
-The advantage of this technology is that the device does not need to directly know SSID or password of an Access Point (AP). This information is provided using this library. This is particularly important to headless device and systems, due to their lack of a user interface.
+The advantage of this technology is that the device does not need to directly know SSID or password of an Access Point (AP). Those information is provided using this library. This is particularly important to headless device and systems, due to their lack of a user interface.
 
 ## Implemented protocols
 
-- EspTouch V2
+- EspTouch V2 :closed_lock_with_key:
+
+## Examples
+
+Several examples of using this library are available in [example](example) folder.
 
 ## Author
 

@@ -101,7 +101,7 @@ class EspProvisioner {
     _logger.debug("bssid ${request.bssid}");
     _logger.debug("pwd ${request.password}");
     _logger.debug("rData ${request.reservedData}");
-    _logger.verbose("encriptionKey ${request.encryptionKey}");
+    _logger.debug("encriptionKey ${request.encryptionKey}");
 
     int p = 0;
     RawDatagramSocket? _socket;
@@ -155,7 +155,7 @@ class EspProvisioner {
         );
 
         _logger.debug(
-            "UDP socket on port ${ports[p]} has been successfully created");
+            "UDP socket on port ${ports[p]} created");
         break;
       } catch (e) {
         sPort.send(_EspWorkerEvent.exception("UDP port bind failed: $e"));
