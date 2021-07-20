@@ -4,9 +4,11 @@ import 'package:pointycastle/export.dart';
 import 'package:pointycastle/padded_block_cipher/padded_block_cipher_impl.dart';
 import 'package:pointycastle/paddings/pkcs7.dart';
 
-abstract class EspProvisioningAes {
+/// Esp Advanced Encryption Standard
+abstract class EspAes {
   static final _iv = Uint8List(16);
 
+  /// Encrypt data with the key
   static Int8List encrypt(Int8List data, Int8List key) {
     final cipher = PaddedBlockCipherImpl(
       PKCS7Padding(),

@@ -3,35 +3,34 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:esp_smartconfig/esp_smartconfig.dart';
-import 'package:esp_smartconfig/src/esp_provisioning_exception.dart';
 import 'package:esp_smartconfig/src/esp_provisioning_protocol.dart';
 import 'package:esp_smartconfig/src/esp_provisioning_response.dart';
-import 'package:esp_smartconfig/src/esp_touch2.dart';
+import 'package:esp_smartconfig/src/esp_smartconfig_exception.dart';
+import 'package:esp_smartconfig/src/proto/esp_touch.dart';
+import 'package:esp_smartconfig/src/proto/esp_touch_v2.dart';
 import 'package:loggerx/loggerx.dart';
 
 final _logger = Logger.findOrCreate('esp_smartconfig');
 
 /// Provisioner
-class EspProvisioner {
+abstract class EspProvisioner<T extends EspProvisioningProtocol> {
   /// Protocol
-  final EspProvisioningProtocol _protocol;
+  final T _protocol;
 
   /// Provisioning isolate
   Isolate? _isolate;
 
-  /// Responses stream controller
-  final _onResponseCtrl = StreamController<EspProvisioningResponse>();
-
-  /// Stream of responses
-  Stream<EspProvisioningResponse> get onResponse =>
-      _onResponseCtrl.stream;
-
   /// Constructor for new EspProvisioner with desired [protocol]
-  EspProvisioner._(this._protocol);
+  EspProvisioner(this._protocol);
 
-  /// EspProvisioner with EspTouch2 protocol
-  factory EspProvisioner.espTouch2() {
-    return EspProvisioner._(EspTouch2());
+  /// [EspTouchV2Provisioner] with [EspTouchV2] protocol
+  static EspTouchV2Provisioner espTouchV2() {
+    return EspTouchV2Provisioner();
+  }
+
+  /// [EspTouchProvisioner] with [EspTouch] protocol
+  static EspTouchProvisioner espTouch() {
+    return EspTouchProvisioner();
   }
 
   /// Start provisioning using [request]
@@ -66,7 +65,10 @@ class EspProvisioner {
             completer.complete();
             break;
           case _EspWorkerEventType.response:
-            _onResponseCtrl.sink.add(data.data);
+            if(this is EspResponseableProvisioner) {
+              (this as EspResponseableProvisioner)._onResponseCtrl.sink.add(data.data);
+            }
+            
             break;
         }
       } else {
@@ -125,6 +127,11 @@ class EspProvisioner {
               return;
             }
 
+            if(protocol is! EspResponseableProtocol) {
+              return;
+            }
+
+            final rProto = protocol as EspResponseableProtocol;
             final pkg = _socket!.receive();
 
             if (pkg == null) {
@@ -132,19 +139,21 @@ class EspProvisioner {
             }
 
             try {
-              final response = protocol.receive(pkg.data);
+              final response = rProto.receive(pkg.data);
 
-              if(response == null) {
-                // Same response already received. Ignoring...
+              if(rProto.findResponse(response) != null) {
+                // Same response already received
                 return;
               }
+
+              rProto.addResponse(response);
 
               _logger.info(
                   "Received response, device bssid: ${response.deviceBssidString}");
               
               sPort.send(_EspWorkerEvent.result(response));
             } catch (e) {
-              _logger.warning("Received invalid EspTouch reponse: $e");
+              _logger.warning("Invalid response: $e");
             }
           },
           onError: (err, s) {
@@ -191,11 +200,30 @@ class EspProvisioner {
       _isolate = null;
     }
 
-    if (!_onResponseCtrl.isClosed) {
-      _onResponseCtrl.close();
+    if(this is EspResponseableProvisioner) {
+      (this as EspResponseableProvisioner)._closeResponseStream();
     }
 
     _logger.info("Provisioning stopped");
+  }
+}
+
+/// Responseable interface which provides ability to streaming responses from a device
+abstract class EspResponseableProvisioner {
+  /// Responses stream controller
+  final _onResponseCtrl = StreamController<EspProvisioningResponse>();
+
+  /// Stream of responses
+  Stream<EspProvisioningResponse> get onResponse => _onResponseCtrl.stream;
+
+  /// Close response stream controller.
+  /// If stream is already closed this function will do nothing
+  void _closeResponseStream() {
+    if(_onResponseCtrl.isClosed) {
+      return;
+    }
+
+    _onResponseCtrl.close();
   }
 }
 

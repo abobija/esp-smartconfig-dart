@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-/// Esp Provisioning CRC calculator
-abstract class EspProvisioningCrc {
+/// Esp CRC
+abstract class EspCrc {
   static final _table = Int16List.fromList(List.generate(256, (index) {
     int remainder = index;
 

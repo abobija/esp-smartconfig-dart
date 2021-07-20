@@ -6,7 +6,7 @@ import 'package:loggerx/loggerx.dart';
 void main() async {
   logging.level = LogLevel.debug;
 
-  final provisioner = EspProvisioner.espTouch2();
+  final provisioner = EspProvisioner.espTouchV2();
 
   provisioner.onResponse.listen((response) {
     log.info("\n"

@@ -2,15 +2,18 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:esp_smartconfig/src/esp_provisioning_aes.dart';
-import 'package:esp_smartconfig/src/esp_provisioning_crc.dart';
-import 'package:esp_smartconfig/src/esp_provisioning_exception.dart';
+import 'package:esp_smartconfig/src/esp_provisioner.dart';
 import 'package:esp_smartconfig/src/esp_provisioning_protocol.dart';
 import 'package:esp_smartconfig/src/esp_provisioning_request.dart';
 import 'package:esp_smartconfig/src/esp_provisioning_response.dart';
+import 'package:esp_smartconfig/src/esp_smartconfig_exception.dart';
 import 'package:loggerx/src/logger.dart';
 
-class EspTouch2 extends EspProvisioningProtocol {
+class EspTouchV2Provisioner extends EspProvisioner<EspTouchV2> with EspResponseableProvisioner {
+  EspTouchV2Provisioner(): super(EspTouchV2());
+}
+
+class EspTouchV2 extends EspProvisioningProtocol with EspResponseableProtocol {
   static final version = 0;
 
   static final _defaultSendIntervalMs =
@@ -84,7 +87,7 @@ class EspTouch2 extends EspProvisioningProtocol {
         plainData.addAll(request.reservedData!);
       }
 
-      final encryptedData = EspProvisioningAes.encrypt(
+      final encryptedData = encrypt(
         Int8List.fromList(plainData),
         request.encryptionKey!
       );
@@ -175,12 +178,12 @@ class EspTouch2 extends EspProvisioningProtocol {
       }
       offset += read.length;
 
-      final crc = EspProvisioningCrc.calculate(read);
+      final _crc = crc(read);
       if (expectLength < buf.length) {
-        buf.buffer.asByteData().setInt8(buf.length - 1, crc);
+        buf.buffer.asByteData().setInt8(buf.length - 1, _crc);
       }
 
-      _createBlocksFor6Bytes(buf, count - 1, crc, tailIsCrc);
+      _createBlocksFor6Bytes(buf, count - 1, _crc, tailIsCrc);
       count++;
     }
 
@@ -213,16 +216,16 @@ class EspTouch2 extends EspProvisioningProtocol {
   }
 
   @override
-  EspProvisioningResponse? receive(Uint8List data) {
+  EspProvisioningResponse receive(Uint8List data) {
     if (data.length < 7) {
-      throw EspProvisioningException(
+      throw InvalidResponseDataException(
           "Invalid data ($data). Length should be at least 7 elements");
     }
 
     final deviceBssid = Uint8List(6);
     deviceBssid.setAll(0, data.skip(1).take(6));
     
-    return addResponse(EspProvisioningResponse(deviceBssid));
+    return EspProvisioningResponse(deviceBssid);
   }
 
   Int8List _head() {
@@ -246,7 +249,7 @@ class EspTouch2 extends EspProvisioningProtocol {
           request.reservedData!.length | (_isReservedDataEncoded ? 0x80 : 0));
     }
 
-    headTmp.add(EspProvisioningCrc.calculate(request.bssid));
+    headTmp.add(crc(request.bssid));
 
     final flag = (1) // bit0 : 1-ipv4, 0-ipv6
         |
@@ -254,11 +257,11 @@ class EspTouch2 extends EspProvisioningProtocol {
         |
         ((portIndex & 0x03) << 3) // bit3 bit4 : app port
         |
-        ((EspTouch2.version & 0x03) << 6); // bit6 bit7 : version
+        ((EspTouchV2.version & 0x03) << 6); // bit6 bit7 : version
 
     headTmp.add(flag);
 
-    headTmp.add(EspProvisioningCrc.calculate(Int8List.fromList(headTmp)));
+    headTmp.add(crc(Int8List.fromList(headTmp)));
     _headLength = headTmp.length;
 
     return Int8List.fromList(headTmp);

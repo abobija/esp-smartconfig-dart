@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:esp_smartconfig/src/esp_provisioning_exception.dart';
+import 'package:esp_smartconfig/src/esp_aes.dart';
+import 'package:esp_smartconfig/src/esp_crc.dart';
 import 'package:esp_smartconfig/src/esp_provisioning_request.dart';
 import 'package:esp_smartconfig/src/esp_provisioning_response.dart';
+import 'package:esp_smartconfig/src/esp_smartconfig_exception.dart';
 import 'package:loggerx/loggerx.dart';
 
-/// Abstract SmartConfig protocol
+/// Abstract provisioning protocol
 abstract class EspProvisioningProtocol {
   /// Network broadcast address
   static final broadcastAddress =
@@ -34,30 +36,6 @@ abstract class EspProvisioningProtocol {
   /// the [portIndex] of opened port
   List<int> get ports;
 
-  final _responsesList = <EspProvisioningResponse>[];
-
-  /// Find response in [_responsesList] by [deviceBssid]
-  EspProvisioningResponse? findResponse(EspProvisioningResponse response) {
-    for(var r in _responsesList) {
-      if(r == response) {
-        return r;
-      }
-    }
-
-    return null;
-  }
-
-  /// Returns added response,
-  /// or [null] if response already exists and has not been added to the list
-  EspProvisioningResponse? addResponse(response) {
-    if(findResponse(response) != null) {
-      return null;
-    }
-
-    _responsesList.add(response);
-    return response;
-  }
-
   /// Protocol setup.
   /// Prepare package, set variables, etc...
   void setup(RawDatagramSocket socket, int portIndex,
@@ -77,9 +55,45 @@ abstract class EspProvisioningProtocol {
     return _socket.send(buffer, broadcastAddress, devicePort);
   }
 
+  /// Returns [data] CRC
+  int crc(Int8List data) {
+    return EspCrc.calculate(data);
+  }
+
+  /// Returns encrypted [data] that is encrypted with the [key]
+  Int8List encrypt(Int8List data, Int8List key) {
+    return EspAes.encrypt(data, key);
+  }
+}
+
+abstract class EspResponseableProtocol {
+  final _responsesList = <EspProvisioningResponse>[];
+
+  /// Find response in [_responsesList] by [deviceBssid]
+  EspProvisioningResponse? findResponse(EspProvisioningResponse response) {
+    for(var r in _responsesList) {
+      if(r == response) {
+        return r;
+      }
+    }
+
+    return null;
+  }
+
+  /// Returns added response
+  /// 
+  /// Throws [ResponseAlreadyReceivedError] if same response already exists
+  EspProvisioningResponse addResponse(EspProvisioningResponse response) {
+    if(findResponse(response) != null) {
+      throw ResponseAlreadyReceivedError("Response with deviceBssid=${response.deviceBssidString} already received");
+    }
+
+    _responsesList.add(response);
+    return response;
+  }
+
   /// Receive data
   /// 
-  /// Returns [null] if same response has been already received.
-  /// Throws [EspProvisioningException] if data of received response is invalid
-  EspProvisioningResponse? receive(Uint8List data);
+  /// Throws [InvalidResponseDataException] if data of received response is invalid
+  EspProvisioningResponse receive(Uint8List data);
 }
