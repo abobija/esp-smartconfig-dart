@@ -8,7 +8,7 @@ The advantage of this technology is that the device does not need to directly kn
 
 ## Implemented protocols
 
-- **EspTouch V2** (encryption, reserved data, connection feedback)
+- EspTouch V2
 
 ## Examples
 
