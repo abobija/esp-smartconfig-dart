@@ -36,6 +36,8 @@ abstract class Protocol {
   /// the [portIndex] of opened port
   List<int> get ports;
 
+  final _responsesList = <ProvisioningResponse>[];
+
   /// Protocol setup.
   /// Prepare package, set variables, etc...
   void setup(RawDatagramSocket socket, int portIndex,
@@ -49,26 +51,6 @@ abstract class Protocol {
   /// Loop is invoked by provisioner [timer] in very short [stepMs] intervals, typically 1-10 ms.
   /// This is good place to send data
   void loop(int stepMs, Timer timer);
-
-  /// Sends a data [buffer]
-  int send(List<int> buffer) {
-    return _socket.send(buffer, broadcastAddress, devicePort);
-  }
-
-  /// Returns [data] CRC
-  int crc(Int8List data) {
-    return Crc.calculate(data);
-  }
-
-  /// Returns encrypted [data] that is encrypted with the [key]
-  Int8List encrypt(Int8List data, Int8List key) {
-    return Aes.encrypt(data, key);
-  }
-}
-
-/// Provisioning protocol that can receive responses from Esp devices
-abstract class EspResponseableProtocol {
-  final _responsesList = <ProvisioningResponse>[];
 
   /// Find response in [_responsesList] by [deviceBssid]
   ProvisioningResponse? findResponse(ProvisioningResponse response) {
@@ -98,4 +80,19 @@ abstract class EspResponseableProtocol {
   ///
   /// Throws [InvalidProvisioningResponseDataException] if data of received response is invalid
   ProvisioningResponse receive(Uint8List data);
+
+  /// Sends a data [buffer]
+  int send(List<int> buffer) {
+    return _socket.send(buffer, broadcastAddress, devicePort);
+  }
+
+  /// Returns [data] CRC
+  int crc(Int8List data) {
+    return Crc.calculate(data);
+  }
+
+  /// Returns encrypted [data] that is encrypted with the [key]
+  Int8List encrypt(Int8List data, Int8List key) {
+    return Aes.encrypt(data, key);
+  }
 }

@@ -13,24 +13,40 @@ import 'package:loggerx/loggerx.dart';
 final _logger = Logger.findOrCreate('esp_smartconfig');
 
 /// Provisioner
-abstract class Provisioner<T extends Protocol> {
+class Provisioner {
   /// Protocol
-  final T _protocol;
+  final Protocol _protocol;
 
   /// Provisioning isolate
   Isolate? _isolate;
 
-  /// Constructor for new EspProvisioner with desired [protocol]
-  Provisioner(this._protocol);
+  /// Responses stream controller
+  final _onResponseCtrl = StreamController<ProvisioningResponse>();
 
-  /// [EspTouchV2Provisioner] with [EspTouchV2] protocol
-  static EspTouchV2Provisioner espTouchV2() {
-    return EspTouchV2Provisioner();
+  /// Stream of responses
+  Stream<ProvisioningResponse> get onResponse => _onResponseCtrl.stream;
+
+  /// Close response stream controller.
+  /// If stream is already closed this function will do nothing
+  void _closeResponseStream() {
+    if (_onResponseCtrl.isClosed) {
+      return;
+    }
+
+    _onResponseCtrl.close();
   }
 
-  /// [EspTouchProvisioner] with [EspTouch] protocol
-  static EspTouchProvisioner espTouch() {
-    return EspTouchProvisioner();
+  /// Constructor for new EspProvisioner with desired [protocol]
+  Provisioner._(this._protocol);
+
+  /// Provisioner with [EspTouchV2] protocol
+  factory Provisioner.espTouchV2() {
+    return Provisioner._(EspTouchV2());
+  }
+
+  /// Provisioner with [EspTouch] protocol
+  factory Provisioner.espTouch() {
+    return Provisioner._(EspTouch());
   }
 
   /// Start provisioning using [request]
@@ -65,13 +81,7 @@ abstract class Provisioner<T extends Protocol> {
             completer.complete();
             break;
           case _EspWorkerEventType.response:
-            if (this is ResponseableProvisioner) {
-              (this as ResponseableProvisioner)
-                  ._onResponseCtrl
-                  .sink
-                  .add(data.data);
-            }
-
+            _onResponseCtrl.sink.add(data.data);
             break;
         }
       } else {
@@ -130,11 +140,6 @@ abstract class Provisioner<T extends Protocol> {
               return;
             }
 
-            if (protocol is! EspResponseableProtocol) {
-              return;
-            }
-
-            final rProto = protocol as EspResponseableProtocol;
             final pkg = _socket!.receive();
 
             if (pkg == null) {
@@ -142,14 +147,14 @@ abstract class Provisioner<T extends Protocol> {
             }
 
             try {
-              final response = rProto.receive(pkg.data);
+              final response = protocol.receive(pkg.data);
 
-              if (rProto.findResponse(response) != null) {
+              if (protocol.findResponse(response) != null) {
                 // Same response already received
                 return;
               }
 
-              rProto.addResponse(response);
+              protocol.addResponse(response);
 
               _logger.info(
                   "Received response, device bssid: ${response.deviceBssidString}");
@@ -201,31 +206,9 @@ abstract class Provisioner<T extends Protocol> {
       _isolate!.kill(priority: Isolate.immediate);
       _isolate = null;
     }
-
-    if (this is ResponseableProvisioner) {
-      (this as ResponseableProvisioner)._closeResponseStream();
-    }
+    _closeResponseStream();
 
     _logger.info("Provisioning stopped");
-  }
-}
-
-/// Responseable provisioner that provides ability for streaming responses
-abstract class ResponseableProvisioner {
-  /// Responses stream controller
-  final _onResponseCtrl = StreamController<ProvisioningResponse>();
-
-  /// Stream of responses
-  Stream<ProvisioningResponse> get onResponse => _onResponseCtrl.stream;
-
-  /// Close response stream controller.
-  /// If stream is already closed this function will do nothing
-  void _closeResponseStream() {
-    if (_onResponseCtrl.isClosed) {
-      return;
-    }
-
-    _onResponseCtrl.close();
   }
 }
 

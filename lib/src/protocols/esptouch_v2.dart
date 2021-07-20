@@ -2,19 +2,13 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:esp_smartconfig/src/provisioner.dart';
 import 'package:esp_smartconfig/src/protocol.dart';
 import 'package:esp_smartconfig/src/provisioning_request.dart';
 import 'package:esp_smartconfig/src/provisioning_response.dart';
 import 'package:esp_smartconfig/src/exceptions.dart';
 import 'package:loggerx/src/logger.dart';
 
-class EspTouchV2Provisioner extends Provisioner<EspTouchV2>
-    with ResponseableProvisioner {
-  EspTouchV2Provisioner() : super(EspTouchV2());
-}
-
-class EspTouchV2 extends Protocol with EspResponseableProtocol {
+class EspTouchV2 extends Protocol {
   static final version = 0;
 
   static final _defaultSendIntervalMs =
