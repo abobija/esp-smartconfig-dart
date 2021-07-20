@@ -9,7 +9,7 @@ import 'package:esp_smartconfig/src/provisioning_response.dart';
 import 'package:esp_smartconfig/src/exceptions.dart';
 import 'package:loggerx/loggerx.dart';
 
-/// Abstract provisioning protocol
+/// Provisioning protocol
 abstract class Protocol {
   /// Network broadcast address
   static final broadcastAddress =
@@ -66,6 +66,7 @@ abstract class Protocol {
   }
 }
 
+/// Provisioning protocol that can receive responses from Esp devices
 abstract class EspResponseableProtocol {
   final _responsesList = <ProvisioningResponse>[];
 

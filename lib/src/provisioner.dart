@@ -65,8 +65,8 @@ abstract class Provisioner<T extends Protocol> {
             completer.complete();
             break;
           case _EspWorkerEventType.response:
-            if (this is EspResponseableProvisioner) {
-              (this as EspResponseableProvisioner)
+            if (this is ResponseableProvisioner) {
+              (this as ResponseableProvisioner)
                   ._onResponseCtrl
                   .sink
                   .add(data.data);
@@ -202,16 +202,16 @@ abstract class Provisioner<T extends Protocol> {
       _isolate = null;
     }
 
-    if (this is EspResponseableProvisioner) {
-      (this as EspResponseableProvisioner)._closeResponseStream();
+    if (this is ResponseableProvisioner) {
+      (this as ResponseableProvisioner)._closeResponseStream();
     }
 
     _logger.info("Provisioning stopped");
   }
 }
 
-/// Responseable interface which provides ability to streaming responses from a device
-abstract class EspResponseableProvisioner {
+/// Responseable provisioner that provides ability for streaming responses
+abstract class ResponseableProvisioner {
   /// Responses stream controller
   final _onResponseCtrl = StreamController<ProvisioningResponse>();
 

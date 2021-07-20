@@ -10,7 +10,7 @@ import 'package:esp_smartconfig/src/exceptions.dart';
 import 'package:loggerx/src/logger.dart';
 
 class EspTouchV2Provisioner extends Provisioner<EspTouchV2>
-    with EspResponseableProvisioner {
+    with ResponseableProvisioner {
   EspTouchV2Provisioner() : super(EspTouchV2());
 }
 
