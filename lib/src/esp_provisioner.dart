@@ -16,15 +16,15 @@ class EspProvisioner {
   /// Protocol
   final EspProvisioningProtocol _protocol;
 
+  /// Provisioning isolate
   Isolate? _isolate;
 
-  final _results = <EspProvisioningResponse>[];
-
-  final _onDeviceConnectedCtrl = StreamController<EspProvisioningResponse>();
+  /// Responses stream controller
+  final _onResponseCtrl = StreamController<EspProvisioningResponse>();
 
   /// Stream of responses
   Stream<EspProvisioningResponse> get onResponse =>
-      _onDeviceConnectedCtrl.stream;
+      _onResponseCtrl.stream;
 
   /// Constructor for new EspProvisioner with desired [protocol]
   EspProvisioner._(this._protocol);
@@ -32,15 +32,6 @@ class EspProvisioner {
   /// EspProvisioner with EspTouch2 protocol
   factory EspProvisioner.espTouch2() {
     return EspProvisioner._(EspTouch2());
-  }
-
-  void _addResultDistinct(EspProvisioningResponse result) {
-    if (_results.contains(result)) {
-      return;
-    }
-
-    _results.add(result);
-    _onDeviceConnectedCtrl.sink.add(result);
   }
 
   /// Start provisioning using [request]
@@ -74,8 +65,8 @@ class EspProvisioner {
           case _EspWorkerEventType.started:
             completer.complete();
             break;
-          case _EspWorkerEventType.result:
-            _addResultDistinct(data.data);
+          case _EspWorkerEventType.response:
+            _onResponseCtrl.sink.add(data.data);
             break;
         }
       } else {
@@ -142,8 +133,15 @@ class EspProvisioner {
 
             try {
               final response = protocol.receive(pkg.data);
-              _logger.verbose(
-                  "Received EspTouch response, device bssid ${response.deviceBssid}");
+
+              if(response == null) {
+                // Same response already received. Ignoring...
+                return;
+              }
+
+              _logger.info(
+                  "Received response, device bssid: ${response.deviceBssidString}");
+              
               sPort.send(_EspWorkerEvent.result(response));
             } catch (e) {
               _logger.warning("Received invalid EspTouch reponse: $e");
@@ -193,8 +191,8 @@ class EspProvisioner {
       _isolate = null;
     }
 
-    if (!_onDeviceConnectedCtrl.isClosed) {
-      _onDeviceConnectedCtrl.close();
+    if (!_onResponseCtrl.isClosed) {
+      _onResponseCtrl.close();
     }
 
     _logger.info("Provisioning stopped");
@@ -217,7 +215,7 @@ enum _EspWorkerEventType {
   init,
   exception,
   started,
-  result,
+  response,
 }
 
 class _EspWorkerEvent {
@@ -242,6 +240,6 @@ class _EspWorkerEvent {
   }
 
   factory _EspWorkerEvent.result(EspProvisioningResponse result) {
-    return _EspWorkerEvent(_EspWorkerEventType.result, result);
+    return _EspWorkerEvent(_EspWorkerEventType.response, result);
   }
 }

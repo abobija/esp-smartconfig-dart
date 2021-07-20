@@ -213,7 +213,7 @@ class EspTouch2 extends EspProvisioningProtocol {
   }
 
   @override
-  EspProvisioningResponse receive(Uint8List data) {
+  EspProvisioningResponse? receive(Uint8List data) {
     if (data.length < 7) {
       throw EspProvisioningException(
           "Invalid data ($data). Length should be at least 7 elements");
@@ -221,8 +221,8 @@ class EspTouch2 extends EspProvisioningProtocol {
 
     final deviceBssid = Uint8List(6);
     deviceBssid.setAll(0, data.skip(1).take(6));
-
-    return EspProvisioningResponse(deviceBssid);
+    
+    return addResponse(EspProvisioningResponse(deviceBssid));
   }
 
   Int8List _head() {

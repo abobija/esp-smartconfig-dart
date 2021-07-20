@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:esp_smartconfig/src/esp_provisioning_exception.dart';
 import 'package:esp_smartconfig/src/esp_provisioning_request.dart';
 import 'package:esp_smartconfig/src/esp_provisioning_response.dart';
 import 'package:loggerx/loggerx.dart';
@@ -33,6 +34,30 @@ abstract class EspProvisioningProtocol {
   /// the [portIndex] of opened port
   List<int> get ports;
 
+  final _responsesList = <EspProvisioningResponse>[];
+
+  /// Find response in [_responsesList] by [deviceBssid]
+  EspProvisioningResponse? findResponse(EspProvisioningResponse response) {
+    for(var r in _responsesList) {
+      if(r == response) {
+        return r;
+      }
+    }
+
+    return null;
+  }
+
+  /// Returns added response,
+  /// or [null] if response already exists and has not been added to the list
+  EspProvisioningResponse? addResponse(response) {
+    if(findResponse(response) != null) {
+      return null;
+    }
+
+    _responsesList.add(response);
+    return response;
+  }
+
   /// Protocol setup.
   /// Prepare package, set variables, etc...
   void setup(RawDatagramSocket socket, int portIndex,
@@ -53,5 +78,8 @@ abstract class EspProvisioningProtocol {
   }
 
   /// Receive data
-  EspProvisioningResponse receive(Uint8List data);
+  /// 
+  /// Returns [null] if same response has been already received.
+  /// Throws [EspProvisioningException] if data of received response is invalid
+  EspProvisioningResponse? receive(Uint8List data);
 }

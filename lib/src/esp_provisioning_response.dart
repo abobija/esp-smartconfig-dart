@@ -19,19 +19,27 @@ class EspProvisioningResponse {
         deviceBssid.map((b) => b.toRadixString(16).padLeft(2, '0')).join(':');
   }
 
-  /// Equality by using [deviceBssid]
+  /// Equality checking by [deviceBssid]
   bool operator ==(Object result) {
     if (result is EspProvisioningResponse) {
-      for (int i = 0; i < deviceBssid.length; i++) {
-        if (deviceBssid[i] != result.deviceBssid[i]) {
-          return false;
-        }
-      }
-
-      return true;
+      return bssidsAreEqual(result.deviceBssid, deviceBssid);
     }
 
     return false;
+  }
+
+  static bool bssidsAreEqual(Uint8List bssid1, Uint8List bssid2) {
+    if(bssid1.length != 6 || bssid2.length != 6) {
+      throw ArgumentError("Invalid BSSID");
+    }
+
+    for (int i = 0; i < 6; i++) {
+      if (bssid1[i] != bssid2[i]) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   @override

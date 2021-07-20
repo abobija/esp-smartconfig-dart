@@ -38,8 +38,6 @@ class EspProvisioningRequest {
   /// Create request from string values
   ///
   /// [bssid] shoud be in format xx:xx:xx:xx:xx:xx
-  /// 
-  /// [encryptionKey] is used for EspTouch2
   factory EspProvisioningRequest.fromStrings({
     required String ssid,
     required String bssid,
