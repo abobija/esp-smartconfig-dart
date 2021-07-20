@@ -21,13 +21,14 @@ void main() async {
       bssid: "f8:d1:11:bf:28:5c",
       password: "renault19",
       reservedData: "Hello from Dart",
+      encryptionKey: "MySecretKey!6754",
     ));
+
+    await Future.delayed(Duration(seconds: 10));
   } catch (e, s) {
     log.error(e, s);
   }
-
-  await Future.delayed(Duration(seconds: 10));
+  
   provisioner.stop();
-
   exit(0);
 }

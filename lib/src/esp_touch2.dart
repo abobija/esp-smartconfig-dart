@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:esp_smartconfig/src/esp_provisioning_aes.dart';
 import 'package:esp_smartconfig/src/esp_provisioning_crc.dart';
 import 'package:esp_smartconfig/src/esp_provisioning_exception.dart';
 import 'package:esp_smartconfig/src/esp_provisioning_protocol.dart';
@@ -60,6 +61,9 @@ class EspTouch2 extends EspProvisioningProtocol {
     _reservedPaddingFactor = value ? 5 : 6;
   }
 
+  bool get willEncrypt => request.encryptionKey != null
+    && (request.password != null || request.reservedData != null);
+
   @override
   void setup(RawDatagramSocket socket, int portIndex,
       EspProvisioningRequest request, Logger logger) {
@@ -69,25 +73,52 @@ class EspTouch2 extends EspProvisioningProtocol {
 
     dataTmp.addAll(_head());
 
-    if (request.password != null) {
-      _passwordLength = request.password!.length;
-      dataTmp.addAll(request.password!);
+    if(willEncrypt) {
+      final plainData = <int>[];
 
-      if (_isPasswordEncoded || _isReservedDataEncoded) {
-        final padding = _padding(_passwordPaddingFactor, request.password);
-        _passwordPaddingLength = padding.length;
-        dataTmp.addAll(padding);
+      if(request.password != null) {
+        plainData.addAll(request.password!);
       }
-    }
 
-    if (request.reservedData != null) {
-      _reservedDataLength = request.reservedData!.length;
-      dataTmp.addAll(request.reservedData!);
+      if(request.reservedData != null) {
+        plainData.addAll(request.reservedData!);
+      }
 
-      if (_isPasswordEncoded || _isReservedDataEncoded) {
-        final padding = _padding(_reservedPaddingFactor, request.reservedData);
-        _reservedDataPaddingLength = padding.length;
-        dataTmp.addAll(padding);
+      final encryptedData = EspProvisioningAes.encrypt(
+        Int8List.fromList(plainData),
+        request.encryptionKey!
+      );
+
+      plainData.clear();
+
+      isPasswordEncoded = true;
+      _passwordLength = encryptedData.length;
+      dataTmp.addAll(encryptedData);
+
+      final padding = _padding(_passwordPaddingFactor, encryptedData);
+      _passwordPaddingLength = padding.length;
+      dataTmp.addAll(padding);
+    } else {
+      if (request.password != null) {
+        _passwordLength = request.password!.length;
+        dataTmp.addAll(request.password!);
+
+        if (_isPasswordEncoded || _isReservedDataEncoded) {
+          final padding = _padding(_passwordPaddingFactor, request.password);
+          _passwordPaddingLength = padding.length;
+          dataTmp.addAll(padding);
+        }
+      }
+
+      if (request.reservedData != null) {
+        _reservedDataLength = request.reservedData!.length;
+        dataTmp.addAll(request.reservedData!);
+
+        if (_isPasswordEncoded || _isReservedDataEncoded) {
+          final padding = _padding(_reservedPaddingFactor, request.reservedData);
+          _reservedDataPaddingLength = padding.length;
+          dataTmp.addAll(padding);
+        }
       }
     }
 
@@ -107,6 +138,11 @@ class EspTouch2 extends EspProvisioningProtocol {
         _headLength + _passwordLength + _passwordPaddingLength;
     int ssidBeginPos =
         reservedDataBeginPos + _reservedDataLength + _reservedDataPaddingLength;
+
+    logger.verbose("encoded (pass=$_isPasswordEncoded, data=$_isReservedDataEncoded, ssid=$_isSsidEncoded)");
+    logger.verbose("paddingFactors (pass=$_passwordPaddingFactor, data=$_reservedPaddingFactor, ssid=$_ssidPaddingFactor)");
+    logger.verbose("beginPos (data=$reservedDataBeginPos, ssid=$ssidBeginPos)");
+
     int offset = 0;
     int count = 0;
 
@@ -214,7 +250,7 @@ class EspTouch2 extends EspProvisioningProtocol {
 
     final flag = (1) // bit0 : 1-ipv4, 0-ipv6
         |
-        ((0) << 1) // bit1 bit2 : 00-no crypt, 01-crypt
+        ((willEncrypt ? 0x01 : 0x00) << 1) // bit1 bit2 : 00-no crypt, 01-crypt
         |
         ((portIndex & 0x03) << 3) // bit3 bit4 : app port
         |

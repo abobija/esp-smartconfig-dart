@@ -7,6 +7,7 @@ class EspProvisioningRequest {
   static final passwordLengthMax = 64;
   static final reservedDataLengthMax = 127;
   static final bssidLength = 6;
+  static final encryptionKeyLength = 16;
 
   /// SSID (max length: 32 bytes)
   final Int8List ssid;
@@ -21,11 +22,15 @@ class EspProvisioningRequest {
   /// Reserved data (max length: 127 bytes)
   final Int8List? reservedData;
 
+  /// Encryption key used for EspTouch2 (null or fixed length of 16 bytes)
+  final Int8List? encryptionKey;
+
   EspProvisioningRequest({
     required this.ssid,
     required this.bssid,
     this.password,
     this.reservedData,
+    this.encryptionKey,
   }) {
     _validate();
   }
@@ -33,11 +38,14 @@ class EspProvisioningRequest {
   /// Create request from string values
   ///
   /// [bssid] shoud be in format xx:xx:xx:xx:xx:xx
+  /// 
+  /// [encryptionKey] is used for EspTouch2
   factory EspProvisioningRequest.fromStrings({
     required String ssid,
     required String bssid,
     String? password,
     String? reservedData,
+    String? encryptionKey,
   }) {
     return EspProvisioningRequest(
       ssid: Int8List.fromList(utf8.encode(ssid)),
@@ -48,6 +56,9 @@ class EspProvisioningRequest {
       reservedData: reservedData == null
           ? null
           : Int8List.fromList(utf8.encode(reservedData)),
+      encryptionKey: encryptionKey == null
+          ? null
+          : Int8List.fromList(utf8.encode(encryptionKey)),
     );
   }
 
@@ -68,6 +79,12 @@ class EspProvisioningRequest {
     if (reservedData != null && reservedData!.length > reservedDataLengthMax) {
       throw ArgumentError(
           "ReservedData length is greater than $reservedDataLengthMax");
+    }
+
+    if(encryptionKey != null && encryptionKey!.length != encryptionKeyLength) {
+      throw ArgumentError(
+        "Length of encryption key must be fixed ${encryptionKeyLength} bytes"
+      );
     }
   }
 }

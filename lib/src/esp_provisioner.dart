@@ -110,6 +110,7 @@ class EspProvisioner {
     _logger.debug("bssid ${request.bssid}");
     _logger.debug("pwd ${request.password}");
     _logger.debug("rData ${request.reservedData}");
+    _logger.verbose("encriptionKey ${request.encryptionKey}");
 
     int p = 0;
     RawDatagramSocket? _socket;
