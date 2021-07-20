@@ -13,6 +13,9 @@ class EspTouch extends Protocol {
   static final ipLen = 4; // ipv4
 
   @override
+  String get name => "EspTouch v1";
+
+  @override
   List<int> get ports => [18266];
 
   @override
@@ -26,7 +29,7 @@ class EspTouch extends Protocol {
     final dataCodes = _dataCodes();
     
     for(int i = 0; i < dataCodes.length / 2; i++) {
-      blocks.add(extraLen + _join16(
+      blocks.add(extraLen + merge16(
         dataCodes[i * 2],
         dataCodes[i * 2 + 1]
       ));
@@ -95,31 +98,18 @@ class EspTouch extends Protocol {
       throw ArgumentError("Invalid index (> 127)");
     }
 
-    final _data = _split(u8);
-    final _crc = _split(crc(Int8List.fromList([u8, index])));
+    final _data = split8(u8);
+    final _crc = split8(crc(Int8List.fromList([u8, index])));
 
     return Uint8List.fromList([
       0x00,
-      _join(_crc[0], _data[0]),
+      merge8(_crc[0], _data[0]),
       0x01,
       index,
       0x00,
-      _join(_crc[1], _data[1])
+      merge8(_crc[1], _data[1])
     ]);
   }
-
-  /// Returns high/low nibbles of unsigned [byte]
-  Uint8List _split(int byte) {
-    return Uint8List.fromList([
-      (byte & 0xF0) >> 4, byte & 0x0F
-    ]);
-  }
-
-  /// Joins byte high/low nibbles into new unsigned byte
-  int _join(int high, int low) => u8((high << 4) | low);
-
-  /// Joins two usinged bytes [high] and [low] into usigned 16 bit integer
-  int _join16(int high, int low) => u16((high << 8) | low);
 
   //Int8List _block(int len) 
   //  => Int8List.fromList(List.filled(len, 49));

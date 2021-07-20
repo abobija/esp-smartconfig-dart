@@ -11,6 +11,9 @@ import 'package:loggerx/loggerx.dart';
 
 /// Provisioning protocol
 abstract class Protocol {
+  /// Protocol name
+  String get name;
+
   /// Network broadcast address
   static final broadcastAddress =
       InternetAddress.fromRawAddress(Uint8List.fromList([255, 255, 255, 255]));
@@ -89,22 +92,28 @@ abstract class Protocol {
   }
 
   /// Cast signed byte [s8] to unsigned byte [u8]
-  int u8(int s8) {
-    return s8 & 0xFF;
-  }
+  int u8(int s8) => s8 & 0xFF;
 
   /// Cast signed 16 bit integer [s16] into unsigned 16 bit integer [u16]
-  int u16(int s16) {
-    return s16 & 0xFFFF;
-  }
+  int u16(int s16) => s16 & 0xFFFF;
 
-  /// Returns [data] CRC
-  int crc(Int8List data) {
-    return Crc.calculate(data);
-  }
+  /// Merge high/low nibbles into new unsigned byte
+  int merge8(int high, int low) => u8((high << 4) | low);
+
+  /// Spit unsigned [byte] to high and low nibbles
+  Uint8List split8(int byte) => Uint8List.fromList([
+    (byte & 0xF0) >> 4, byte & 0x0F
+  ]);
+
+  /// Merge two unsigned bytes ([high] and [low]) into new unsigned 16 bit integer
+  int merge16(int high, int low) => u16((high << 8) | low);
+
+  /// CRC of [data]
+  int crc(Int8List data) => Crc.calculate(data);
 
   /// Returns encrypted [data] that is encrypted with the [key]
-  Int8List encrypt(Int8List data, Int8List key) {
-    return Aes.encrypt(data, key);
-  }
+  Int8List encrypt(Int8List data, Int8List key) => Aes.encrypt(data, key);
+
+  @override
+  String toString() => name;
 }

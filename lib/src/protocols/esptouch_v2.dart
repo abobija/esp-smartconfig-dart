@@ -17,6 +17,9 @@ class EspTouchV2 extends Protocol {
   static final _slowIntervalThresholdMs = Duration(seconds: 20).inMilliseconds;
 
   @override
+  String get name => "EspTouch v2";
+
+  @override
   List<int> get ports => [18266, 28266, 38266, 48266];
 
   int _stepCounter = 0;

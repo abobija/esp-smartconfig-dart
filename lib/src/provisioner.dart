@@ -110,7 +110,7 @@ class Provisioner {
     final _logger = worker.logger;
     final protocol = worker.protocol;
 
-    _logger.info("Provisioning starting...");
+    _logger.info("Povisioning ($protocol) starting...");
 
     _logger.debug("ssid ${request.ssid}");
     _logger.debug("bssid ${request.bssid}");
