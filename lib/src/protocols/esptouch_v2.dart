@@ -2,18 +2,19 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:esp_smartconfig/src/esp_provisioner.dart';
-import 'package:esp_smartconfig/src/esp_provisioning_protocol.dart';
-import 'package:esp_smartconfig/src/esp_provisioning_request.dart';
-import 'package:esp_smartconfig/src/esp_provisioning_response.dart';
-import 'package:esp_smartconfig/src/esp_smartconfig_exception.dart';
+import 'package:esp_smartconfig/src/provisioner.dart';
+import 'package:esp_smartconfig/src/protocol.dart';
+import 'package:esp_smartconfig/src/provisioning_request.dart';
+import 'package:esp_smartconfig/src/provisioning_response.dart';
+import 'package:esp_smartconfig/src/exceptions.dart';
 import 'package:loggerx/src/logger.dart';
 
-class EspTouchV2Provisioner extends EspProvisioner<EspTouchV2> with EspResponseableProvisioner {
-  EspTouchV2Provisioner(): super(EspTouchV2());
+class EspTouchV2Provisioner extends Provisioner<EspTouchV2>
+    with EspResponseableProvisioner {
+  EspTouchV2Provisioner() : super(EspTouchV2());
 }
 
-class EspTouchV2 extends EspProvisioningProtocol with EspResponseableProtocol {
+class EspTouchV2 extends Protocol with EspResponseableProtocol {
   static final version = 0;
 
   static final _defaultSendIntervalMs =
@@ -64,33 +65,32 @@ class EspTouchV2 extends EspProvisioningProtocol with EspResponseableProtocol {
     _reservedPaddingFactor = value ? 5 : 6;
   }
 
-  bool get willEncrypt => request.encryptionKey != null
-    && (request.password != null || request.reservedData != null);
+  bool get willEncrypt =>
+      request.encryptionKey != null &&
+      (request.password != null || request.reservedData != null);
 
   @override
   void setup(RawDatagramSocket socket, int portIndex,
-      EspProvisioningRequest request, Logger logger) {
+      ProvisioningRequest request, Logger logger) {
     super.setup(socket, portIndex, request, logger);
 
     final dataTmp = <int>[];
 
     dataTmp.addAll(_head());
 
-    if(willEncrypt) {
+    if (willEncrypt) {
       final plainData = <int>[];
 
-      if(request.password != null) {
+      if (request.password != null) {
         plainData.addAll(request.password!);
       }
 
-      if(request.reservedData != null) {
+      if (request.reservedData != null) {
         plainData.addAll(request.reservedData!);
       }
 
-      final encryptedData = encrypt(
-        Int8List.fromList(plainData),
-        request.encryptionKey!
-      );
+      final encryptedData =
+          encrypt(Int8List.fromList(plainData), request.encryptionKey!);
 
       plainData.clear();
 
@@ -118,7 +118,8 @@ class EspTouchV2 extends EspProvisioningProtocol with EspResponseableProtocol {
         dataTmp.addAll(request.reservedData!);
 
         if (_isPasswordEncoded || _isReservedDataEncoded) {
-          final padding = _padding(_reservedPaddingFactor, request.reservedData);
+          final padding =
+              _padding(_reservedPaddingFactor, request.reservedData);
           _reservedDataPaddingLength = padding.length;
           dataTmp.addAll(padding);
         }
@@ -142,8 +143,10 @@ class EspTouchV2 extends EspProvisioningProtocol with EspResponseableProtocol {
     int ssidBeginPos =
         reservedDataBeginPos + _reservedDataLength + _reservedDataPaddingLength;
 
-    logger.verbose("encoded (pass=$_isPasswordEncoded, data=$_isReservedDataEncoded, ssid=$_isSsidEncoded)");
-    logger.verbose("paddingFactors (pass=$_passwordPaddingFactor, data=$_reservedPaddingFactor, ssid=$_ssidPaddingFactor)");
+    logger.verbose(
+        "encoded (pass=$_isPasswordEncoded, data=$_isReservedDataEncoded, ssid=$_isSsidEncoded)");
+    logger.verbose(
+        "paddingFactors (pass=$_passwordPaddingFactor, data=$_reservedPaddingFactor, ssid=$_ssidPaddingFactor)");
     logger.verbose("beginPos (data=$reservedDataBeginPos, ssid=$ssidBeginPos)");
 
     int offset = 0;
@@ -216,16 +219,16 @@ class EspTouchV2 extends EspProvisioningProtocol with EspResponseableProtocol {
   }
 
   @override
-  EspProvisioningResponse receive(Uint8List data) {
+  ProvisioningResponse receive(Uint8List data) {
     if (data.length < 7) {
-      throw InvalidResponseDataException(
+      throw InvalidProvisioningResponseDataException(
           "Invalid data ($data). Length should be at least 7 elements");
     }
 
     final deviceBssid = Uint8List(6);
     deviceBssid.setAll(0, data.skip(1).take(6));
-    
-    return EspProvisioningResponse(deviceBssid);
+
+    return ProvisioningResponse(deviceBssid);
   }
 
   Int8List _head() {

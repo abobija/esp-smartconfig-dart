@@ -1,17 +1,17 @@
 import 'dart:typed_data';
 
-import 'package:esp_smartconfig/src/esp_provisioning_request.dart';
+import 'package:esp_smartconfig/src/provisioning_request.dart';
 
 /// Provisioning response
-class EspProvisioningResponse {
+class ProvisioningResponse {
   /// Connected device BSSID
   final Uint8List deviceBssid;
 
   /// Friendly representation of [deviceBssid] in format aa:bb:cc:dd:ee:ff
   late final String deviceBssidString;
 
-  EspProvisioningResponse(this.deviceBssid) {
-    if (deviceBssid.length != EspProvisioningRequest.bssidLength) {
+  ProvisioningResponse(this.deviceBssid) {
+    if (deviceBssid.length != ProvisioningRequest.bssidLength) {
       throw ArgumentError("Invalid BSSID");
     }
 
@@ -21,7 +21,7 @@ class EspProvisioningResponse {
 
   /// Equality checking by [deviceBssid]
   bool operator ==(Object result) {
-    if (result is EspProvisioningResponse) {
+    if (result is ProvisioningResponse) {
       return bssidsAreEqual(result.deviceBssid, deviceBssid);
     }
 
@@ -29,7 +29,7 @@ class EspProvisioningResponse {
   }
 
   static bool bssidsAreEqual(Uint8List bssid1, Uint8List bssid2) {
-    if(bssid1.length != 6 || bssid2.length != 6) {
+    if (bssid1.length != 6 || bssid2.length != 6) {
       throw ArgumentError("Invalid BSSID");
     }
 

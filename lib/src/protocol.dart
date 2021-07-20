@@ -2,15 +2,15 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:esp_smartconfig/src/esp_aes.dart';
-import 'package:esp_smartconfig/src/esp_crc.dart';
-import 'package:esp_smartconfig/src/esp_provisioning_request.dart';
-import 'package:esp_smartconfig/src/esp_provisioning_response.dart';
-import 'package:esp_smartconfig/src/esp_smartconfig_exception.dart';
+import 'package:esp_smartconfig/src/aes.dart';
+import 'package:esp_smartconfig/src/crc.dart';
+import 'package:esp_smartconfig/src/provisioning_request.dart';
+import 'package:esp_smartconfig/src/provisioning_response.dart';
+import 'package:esp_smartconfig/src/exceptions.dart';
 import 'package:loggerx/loggerx.dart';
 
 /// Abstract provisioning protocol
-abstract class EspProvisioningProtocol {
+abstract class Protocol {
   /// Network broadcast address
   static final broadcastAddress =
       InternetAddress.fromRawAddress(Uint8List.fromList([255, 255, 255, 255]));
@@ -25,7 +25,7 @@ abstract class EspProvisioningProtocol {
   late final int portIndex;
 
   /// Provisioning request
-  late final EspProvisioningRequest request;
+  late final ProvisioningRequest request;
 
   /// Logger
   late final Logger logger;
@@ -39,7 +39,7 @@ abstract class EspProvisioningProtocol {
   /// Protocol setup.
   /// Prepare package, set variables, etc...
   void setup(RawDatagramSocket socket, int portIndex,
-      EspProvisioningRequest request, Logger logger) {
+      ProvisioningRequest request, Logger logger) {
     _socket = socket;
     this.portIndex = portIndex;
     this.request = request;
@@ -57,22 +57,22 @@ abstract class EspProvisioningProtocol {
 
   /// Returns [data] CRC
   int crc(Int8List data) {
-    return EspCrc.calculate(data);
+    return Crc.calculate(data);
   }
 
   /// Returns encrypted [data] that is encrypted with the [key]
   Int8List encrypt(Int8List data, Int8List key) {
-    return EspAes.encrypt(data, key);
+    return Aes.encrypt(data, key);
   }
 }
 
 abstract class EspResponseableProtocol {
-  final _responsesList = <EspProvisioningResponse>[];
+  final _responsesList = <ProvisioningResponse>[];
 
   /// Find response in [_responsesList] by [deviceBssid]
-  EspProvisioningResponse? findResponse(EspProvisioningResponse response) {
-    for(var r in _responsesList) {
-      if(r == response) {
+  ProvisioningResponse? findResponse(ProvisioningResponse response) {
+    for (var r in _responsesList) {
+      if (r == response) {
         return r;
       }
     }
@@ -81,11 +81,12 @@ abstract class EspResponseableProtocol {
   }
 
   /// Returns added response
-  /// 
-  /// Throws [ResponseAlreadyReceivedError] if same response already exists
-  EspProvisioningResponse addResponse(EspProvisioningResponse response) {
-    if(findResponse(response) != null) {
-      throw ResponseAlreadyReceivedError("Response with deviceBssid=${response.deviceBssidString} already received");
+  ///
+  /// Throws [ProvisioningResponseAlreadyReceivedError] if same response already exists
+  ProvisioningResponse addResponse(ProvisioningResponse response) {
+    if (findResponse(response) != null) {
+      throw ProvisioningResponseAlreadyReceivedError(
+          "Response with deviceBssid=${response.deviceBssidString} already received");
     }
 
     _responsesList.add(response);
@@ -93,7 +94,7 @@ abstract class EspResponseableProtocol {
   }
 
   /// Receive data
-  /// 
-  /// Throws [InvalidResponseDataException] if data of received response is invalid
-  EspProvisioningResponse receive(Uint8List data);
+  ///
+  /// Throws [InvalidProvisioningResponseDataException] if data of received response is invalid
+  ProvisioningResponse receive(Uint8List data);
 }

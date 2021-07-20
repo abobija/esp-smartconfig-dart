@@ -6,7 +6,7 @@ import 'package:loggerx/loggerx.dart';
 void main() async {
   logging.level = LogLevel.debug;
 
-  final provisioner = EspProvisioner.espTouchV2();
+  final provisioner = Provisioner.espTouchV2();
 
   provisioner.onResponse.listen((response) {
     log.info("\n"
@@ -16,7 +16,7 @@ void main() async {
   });
 
   try {
-    await provisioner.start(EspProvisioningRequest.fromStrings(
+    await provisioner.start(ProvisioningRequest.fromStrings(
       ssid: "Renault 1.9D",
       bssid: "f8:d1:11:bf:28:5c",
       password: "renault19",
@@ -27,7 +27,7 @@ void main() async {
   } catch (e, s) {
     log.error(e, s);
   }
-  
+
   provisioner.stop();
   exit(0);
 }

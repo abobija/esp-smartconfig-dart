@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 /// Provisioning request
-class EspProvisioningRequest {
+class ProvisioningRequest {
   static final ssidLengthMax = 32;
   static final passwordLengthMax = 64;
   static final reservedDataLengthMax = 127;
@@ -25,7 +25,7 @@ class EspProvisioningRequest {
   /// Encryption key used for EspTouch2 (null or fixed length of 16 bytes)
   final Int8List? encryptionKey;
 
-  EspProvisioningRequest({
+  ProvisioningRequest({
     required this.ssid,
     required this.bssid,
     this.password,
@@ -38,14 +38,14 @@ class EspProvisioningRequest {
   /// Create request from string values
   ///
   /// [bssid] shoud be in format aa:bb:cc:dd:ee:ff
-  factory EspProvisioningRequest.fromStrings({
+  factory ProvisioningRequest.fromStrings({
     required String ssid,
     required String bssid,
     String? password,
     String? reservedData,
     String? encryptionKey,
   }) {
-    return EspProvisioningRequest(
+    return ProvisioningRequest(
       ssid: Int8List.fromList(utf8.encode(ssid)),
       bssid: Int8List.fromList(
           bssid.split(':').map((hex) => int.parse(hex, radix: 16)).toList()),
@@ -79,10 +79,9 @@ class EspProvisioningRequest {
           "ReservedData length is greater than $reservedDataLengthMax");
     }
 
-    if(encryptionKey != null && encryptionKey!.length != encryptionKeyLength) {
+    if (encryptionKey != null && encryptionKey!.length != encryptionKeyLength) {
       throw ArgumentError(
-        "Length of encryption key must be fixed ${encryptionKeyLength} bytes"
-      );
+          "Length of encryption key must be fixed ${encryptionKeyLength} bytes");
     }
   }
 }

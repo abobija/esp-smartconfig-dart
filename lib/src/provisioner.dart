@@ -3,17 +3,17 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:esp_smartconfig/esp_smartconfig.dart';
-import 'package:esp_smartconfig/src/esp_provisioning_protocol.dart';
-import 'package:esp_smartconfig/src/esp_provisioning_response.dart';
-import 'package:esp_smartconfig/src/esp_smartconfig_exception.dart';
-import 'package:esp_smartconfig/src/proto/esp_touch.dart';
-import 'package:esp_smartconfig/src/proto/esp_touch_v2.dart';
+import 'package:esp_smartconfig/src/protocol.dart';
+import 'package:esp_smartconfig/src/provisioning_response.dart';
+import 'package:esp_smartconfig/src/exceptions.dart';
+import 'package:esp_smartconfig/src/protocols/esptouch.dart';
+import 'package:esp_smartconfig/src/protocols/esptouch_v2.dart';
 import 'package:loggerx/loggerx.dart';
 
 final _logger = Logger.findOrCreate('esp_smartconfig');
 
 /// Provisioner
-abstract class EspProvisioner<T extends EspProvisioningProtocol> {
+abstract class Provisioner<T extends Protocol> {
   /// Protocol
   final T _protocol;
 
@@ -21,7 +21,7 @@ abstract class EspProvisioner<T extends EspProvisioningProtocol> {
   Isolate? _isolate;
 
   /// Constructor for new EspProvisioner with desired [protocol]
-  EspProvisioner(this._protocol);
+  Provisioner(this._protocol);
 
   /// [EspTouchV2Provisioner] with [EspTouchV2] protocol
   static EspTouchV2Provisioner espTouchV2() {
@@ -37,9 +37,9 @@ abstract class EspProvisioner<T extends EspProvisioningProtocol> {
   ///
   /// Provisioning will not stop automatically.
   /// It needs to be stopped manually by calling [stop] method
-  Future<void> start(EspProvisioningRequest request) async {
+  Future<void> start(ProvisioningRequest request) async {
     if (_isolate != null) {
-      throw EspProvisioningException("Provisioning already runing");
+      throw ProvisioningException("Provisioning already runing");
     }
 
     final completer = Completer<void>();
@@ -65,10 +65,13 @@ abstract class EspProvisioner<T extends EspProvisioningProtocol> {
             completer.complete();
             break;
           case _EspWorkerEventType.response:
-            if(this is EspResponseableProvisioner) {
-              (this as EspResponseableProvisioner)._onResponseCtrl.sink.add(data.data);
+            if (this is EspResponseableProvisioner) {
+              (this as EspResponseableProvisioner)
+                  ._onResponseCtrl
+                  .sink
+                  .add(data.data);
             }
-            
+
             break;
         }
       } else {
@@ -127,7 +130,7 @@ abstract class EspProvisioner<T extends EspProvisioningProtocol> {
               return;
             }
 
-            if(protocol is! EspResponseableProtocol) {
+            if (protocol is! EspResponseableProtocol) {
               return;
             }
 
@@ -141,7 +144,7 @@ abstract class EspProvisioner<T extends EspProvisioningProtocol> {
             try {
               final response = rProto.receive(pkg.data);
 
-              if(rProto.findResponse(response) != null) {
+              if (rProto.findResponse(response) != null) {
                 // Same response already received
                 return;
               }
@@ -150,7 +153,7 @@ abstract class EspProvisioner<T extends EspProvisioningProtocol> {
 
               _logger.info(
                   "Received response, device bssid: ${response.deviceBssidString}");
-              
+
               sPort.send(_EspWorkerEvent.result(response));
             } catch (e) {
               _logger.warning("Invalid response: $e");
@@ -163,8 +166,7 @@ abstract class EspProvisioner<T extends EspProvisioningProtocol> {
           cancelOnError: true,
         );
 
-        _logger.debug(
-            "UDP socket on port ${ports[p]} created");
+        _logger.debug("UDP socket on port ${ports[p]} created");
         break;
       } catch (e) {
         sPort.send(_EspWorkerEvent.exception("UDP port bind failed: $e"));
@@ -200,7 +202,7 @@ abstract class EspProvisioner<T extends EspProvisioningProtocol> {
       _isolate = null;
     }
 
-    if(this is EspResponseableProvisioner) {
+    if (this is EspResponseableProvisioner) {
       (this as EspResponseableProvisioner)._closeResponseStream();
     }
 
@@ -211,15 +213,15 @@ abstract class EspProvisioner<T extends EspProvisioningProtocol> {
 /// Responseable interface which provides ability to streaming responses from a device
 abstract class EspResponseableProvisioner {
   /// Responses stream controller
-  final _onResponseCtrl = StreamController<EspProvisioningResponse>();
+  final _onResponseCtrl = StreamController<ProvisioningResponse>();
 
   /// Stream of responses
-  Stream<EspProvisioningResponse> get onResponse => _onResponseCtrl.stream;
+  Stream<ProvisioningResponse> get onResponse => _onResponseCtrl.stream;
 
   /// Close response stream controller.
   /// If stream is already closed this function will do nothing
   void _closeResponseStream() {
-    if(_onResponseCtrl.isClosed) {
+    if (_onResponseCtrl.isClosed) {
       return;
     }
 
@@ -228,9 +230,9 @@ abstract class EspResponseableProvisioner {
 }
 
 class _EspWorker {
-  final EspProvisioningRequest request;
+  final ProvisioningRequest request;
   final Logger logger;
-  final EspProvisioningProtocol protocol;
+  final Protocol protocol;
 
   const _EspWorker({
     required this.request,
@@ -260,14 +262,14 @@ class _EspWorkerEvent {
     String message,
   ) {
     return _EspWorkerEvent(
-        _EspWorkerEventType.exception, EspProvisioningException(message));
+        _EspWorkerEventType.exception, ProvisioningException(message));
   }
 
   factory _EspWorkerEvent.started() {
     return _EspWorkerEvent(_EspWorkerEventType.started);
   }
 
-  factory _EspWorkerEvent.result(EspProvisioningResponse result) {
+  factory _EspWorkerEvent.result(ProvisioningResponse result) {
     return _EspWorkerEvent(_EspWorkerEventType.response, result);
   }
 }
