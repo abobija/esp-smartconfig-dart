@@ -32,8 +32,8 @@ class EspTouch extends Protocol {
 
   Iterable<int> get _guide => blocks.take(_guideLen);
 
-  Iterable<int> _data(int start)
-    => blocks.skip(_guideLen).skip(start).take(_iterationDataLen);
+  Iterable<int> _data(int start) =>
+      blocks.skip(_guideLen).skip(start).take(_iterationDataLen);
 
   @override
   void setup(RawDatagramSocket socket, int portIndex,
@@ -42,7 +42,7 @@ class EspTouch extends Protocol {
 
     // guide blocks
     blocks.addAll([515, 514, 513, 512]);
-    
+
     // data blocks
     blocks.addAll(_dataCodes());
   }
@@ -50,12 +50,12 @@ class EspTouch extends Protocol {
   List<int> _dataCodes() {
     final pwdLen = request.password == null ? 0 : request.password!.length;
     final totalLen = _extraHeadLen + _ipLen + pwdLen + request.ssid.length;
-    
+
     final dataCodes = <int>[];
     int xor = 0;
     int index = 0;
 
-    for(var b in [totalLen, pwdLen, crc(request.ssid), crc(request.bssid)]) {
+    for (var b in [totalLen, pwdLen, crc(request.ssid), crc(request.bssid)]) {
       dataCodes.addAll(_dataCode(b, index++));
       xor ^= b;
     }
@@ -67,7 +67,7 @@ class EspTouch extends Protocol {
       dataCodes.addAll(_dataCode(octet, index++));
     });
 
-    if(request.password != null) {
+    if (request.password != null) {
       request.password!.forEach((b) {
         final u = u8(b);
         xor ^= u;
@@ -94,7 +94,7 @@ class EspTouch extends Protocol {
   }
 
   Uint16List _dataCode(int u8, int index) {
-    if(index > 127) {
+    if (index > 127) {
       throw ArgumentError("Invalid index (> 127)");
     }
 
@@ -113,14 +113,15 @@ class EspTouch extends Protocol {
     final ms = millis();
     final diffMs = ms - _previousMs;
 
-    if(diffMs >= _dataSendingDurationMs) {
+    if (diffMs >= _dataSendingDurationMs) {
       _previousMs = millis();
       _dataPointer = 0;
     } else if (diffMs >= _guideSendingDurationMs) {
       // send data
       _dataBN.exec(() {
         _data(_dataPointer).forEach((b) => send(Uint8List(b)));
-        _dataPointer = (_dataPointer + _iterationDataLen) % (blocks.length - _guideLen);
+        _dataPointer =
+            (_dataPointer + _iterationDataLen) % (blocks.length - _guideLen);
       });
     } else {
       // send guide
@@ -132,15 +133,12 @@ class EspTouch extends Protocol {
 
   @override
   ProvisioningResponse receive(Uint8List data) {
-    if(data.length != 11 || data[0] != 30) {
+    if (data.length != 11 || data[0] != 30) {
       throw InvalidProvisioningResponseDataException(
-        "Invalid data($data) {.length != 11 || [0] != 30}"
-      );
+          "Invalid data($data) {.length != 11 || [0] != 30}");
     }
 
-    return ProvisioningResponse(
-      Uint8List(6)..setAll(0, data.skip(1).take(6)),
-      ipAddress: Uint8List(4)..setAll(0, data.skip(7).take(4))
-    );
+    return ProvisioningResponse(Uint8List(6)..setAll(0, data.skip(1).take(6)),
+        ipAddress: Uint8List(4)..setAll(0, data.skip(7).take(4)));
   }
 }

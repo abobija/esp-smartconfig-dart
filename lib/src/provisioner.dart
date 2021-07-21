@@ -187,13 +187,12 @@ class Provisioner {
     }
 
     protocol.setup(_socket, p, request, _logger);
-    
+
     _logger.verbose("blocks ${protocol.blocks}");
 
     int stepMs = 5;
     Timer.periodic(
-        Duration(milliseconds: stepMs), (t)
-          => protocol.loop(stepMs, t));
+        Duration(milliseconds: stepMs), (t) => protocol.loop(stepMs, t));
 
     _logger.info("Provisioning started");
 

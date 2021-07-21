@@ -74,7 +74,7 @@ abstract class Protocol {
   /// Throws [ProvisioningResponseAlreadyReceivedError] if same response already exists
   ProvisioningResponse addResponse(ProvisioningResponse response) {
     final foundResponse = findResponse(response);
-    
+
     if (foundResponse != null) {
       throw ProvisioningResponseAlreadyReceivedError(
           "Response ($foundResponse) already received");
@@ -110,9 +110,8 @@ abstract class Protocol {
   int merge8(int high, int low) => u8((high << 4) | low);
 
   /// Spit unsigned [byte] to high and low nibbles
-  Uint8List split8(int byte) => Uint8List.fromList([
-    (byte & 0xF0) >> 4, byte & 0x0F
-  ]);
+  Uint8List split8(int byte) =>
+      Uint8List.fromList([(byte & 0xF0) >> 4, byte & 0x0F]);
 
   /// Merge two unsigned bytes ([high] and [low]) into new unsigned 16 bit integer
   int merge16(int high, int low) => u16((high << 8) | low);
@@ -138,7 +137,7 @@ class BottleNeck {
   void exec(Function fn) {
     final ms = Protocol.ms();
 
-    if(ms - _previous > delay) {
+    if (ms - _previous > delay) {
       fn();
       _previous = ms;
     }

@@ -11,13 +11,13 @@ class ProvisioningResponse {
   Uint8List? ipAddress;
 
   /// Textual representation of [bssid] in format aa:bb:cc:dd:ee:ff
-  String get bssidText
-    => bssid.map((b) => b.toRadixString(16).padLeft(2, '0')).join(':');
-  
+  String get bssidText =>
+      bssid.map((b) => b.toRadixString(16).padLeft(2, '0')).join(':');
+
   /// Textual representation of [ipAddress]
   String? get ipAddressText => ipAddress?.join('.');
 
-  ProvisioningResponse(this.bssid, { this.ipAddress }) {
+  ProvisioningResponse(this.bssid, {this.ipAddress}) {
     if (bssid.length != ProvisioningRequest.bssidLength) {
       throw ArgumentError("Invalid BSSID");
     }
@@ -51,9 +51,11 @@ class ProvisioningResponse {
 
   @override
   String toString() {
-    return (StringBuffer()..writeAll([
-      "bssid=$bssidText",
-      ipAddress == null ? '' : ", ip=$ipAddressText",
-    ])).toString();
+    return (StringBuffer()
+          ..writeAll([
+            "bssid=$bssidText",
+            ipAddress == null ? '' : ", ip=$ipAddressText",
+          ]))
+        .toString();
   }
 }
