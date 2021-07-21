@@ -192,14 +192,15 @@ class Provisioner {
 
     int stepMs = 5;
     Timer.periodic(
-        Duration(milliseconds: stepMs), (t) => protocol.loop(stepMs, t));
+        Duration(milliseconds: stepMs), (t)
+          => protocol.loop(stepMs, t));
 
     _logger.info("Provisioning started");
 
     sPort.send(_EspWorkerEvent.started());
   }
 
-  /// Stop provisioning previously started with [start] method
+  /// Stop provisioning that is previously started with [start] method
   void stop() {
     if (_isolate == null) {
       _logger.debug("Isolate already destroyed");

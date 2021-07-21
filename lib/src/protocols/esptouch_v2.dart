@@ -11,10 +11,9 @@ import 'package:loggerx/src/logger.dart';
 class EspTouchV2 extends Protocol {
   static final version = 0;
 
-  static final _defaultSendIntervalMs =
-      Duration(milliseconds: 15).inMilliseconds;
-  static final _slowIntervalMs = Duration(milliseconds: 100).inMilliseconds;
-  static final _slowIntervalThresholdMs = Duration(seconds: 20).inMilliseconds;
+  static final _defaultSendIntervalMs = 15;
+  static final _slowIntervalMs = 100;
+  static final _slowIntervalThresholdMs = 20 * 1000;
 
   @override
   String get name => "EspTouch v2";

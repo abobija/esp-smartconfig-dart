@@ -39,6 +39,7 @@ abstract class Protocol {
   /// the [portIndex] of opened port
   List<int> get ports;
 
+  /// Blocks that needs to be transmitted to device
   final blocks = <int>[];
 
   final _responsesList = <ProvisioningResponse>[];
@@ -91,6 +92,12 @@ abstract class Protocol {
     return _socket.send(buffer, broadcastAddress, devicePort);
   }
 
+  /// Number of milliseconds since Unix epoch
+  static int ms() => DateTime.now().millisecondsSinceEpoch;
+
+  /// Number of milliseconds since Unix epoch
+  int millis() => ms();
+
   /// Cast signed byte [s8] to unsigned byte [u8]
   int u8(int s8) => s8 & 0xFF;
 
@@ -116,4 +123,22 @@ abstract class Protocol {
 
   @override
   String toString() => name;
+}
+
+/// Bottle neck
+class BottleNeck {
+  /// Delay in milliseconds
+  final int delay;
+  int _previous = 0;
+
+  BottleNeck(this.delay);
+
+  void exec(Function fn) {
+    final ms = Protocol.ms();
+
+    if(ms - _previous > delay) {
+      fn();
+      _previous = ms;
+    }
+  }
 }
