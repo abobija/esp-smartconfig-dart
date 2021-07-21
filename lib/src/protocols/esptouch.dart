@@ -108,9 +108,6 @@ class EspTouch extends Protocol {
     ].map((e) => e + _extraLen).toList());
   }
 
-  Int8List _block(int len) 
-    => Int8List.fromList(List.filled(len, 49));
-
   @override
   void loop(int stepMs, Timer timer) {
     final ms = millis();
@@ -122,13 +119,13 @@ class EspTouch extends Protocol {
     } else if (diffMs >= _guideSendingDurationMs) {
       // send data
       _dataBN.exec(() {
-        _data(_dataPointer).forEach((b) => send(_block(b)));
+        _data(_dataPointer).forEach((b) => send(Uint8List(b)));
         _dataPointer = (_dataPointer + _iterationDataLen) % (blocks.length - _guideLen);
       });
     } else {
       // send guide
       _guideBN.exec(() {
-        _guide.forEach((b) => send(_block(b)));
+        _guide.forEach((b) => send(Uint8List(b)));
       });
     }
   }
