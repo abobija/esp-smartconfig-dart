@@ -8,7 +8,7 @@ The advantage of this technology is that the device does not need to directly kn
 
 ## Implemented protocols
 
-> *NOTE: All protocols currently supports only in **broadcast** mode.*
+> *NOTE: All protocols currently supports only **broadcast** mode.*
 
 - EspTouch
 - EspTouch V2
