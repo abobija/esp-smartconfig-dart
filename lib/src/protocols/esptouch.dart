@@ -25,6 +25,7 @@ class EspTouch extends Protocol {
   @override
   List<int> get ports => [18266];
 
+  late int _expectedResponseFirstByte;
   int _previousMs = 0;
 
   /// Pointer to data block which needs to be sent next
@@ -39,6 +40,9 @@ class EspTouch extends Protocol {
   void setup(RawDatagramSocket socket, int portIndex,
       ProvisioningRequest request, Logger logger) {
     super.setup(socket, portIndex, request, logger);
+
+    _expectedResponseFirstByte =
+        request.ssid.length + (request.password?.length ?? 0) + 9;
 
     // guide blocks
     blocks.addAll([515, 514, 513, 512]);
@@ -133,9 +137,9 @@ class EspTouch extends Protocol {
 
   @override
   ProvisioningResponse receive(Uint8List data) {
-    if (data.length != 11 || data[0] != 30) {
+    if (data.length != 11 || data[0] != _expectedResponseFirstByte) {
       throw InvalidProvisioningResponseDataException(
-          "Invalid data($data) {.length != 11 || [0] != 30}");
+          "Invalid data($data) {.length != 11 || [0] != $_expectedResponseFirstByte}");
     }
 
     return ProvisioningResponse(Uint8List(6)..setAll(0, data.skip(1).take(6)),
