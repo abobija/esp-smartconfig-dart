@@ -6,7 +6,7 @@ import 'package:esp_smartconfig/src/protocol.dart';
 import 'package:esp_smartconfig/src/provisioning_request.dart';
 import 'package:esp_smartconfig/src/provisioning_response.dart';
 import 'package:esp_smartconfig/src/exceptions.dart';
-import 'package:loggerx/src/logger.dart';
+import 'package:loggerx/loggerx.dart';
 
 class EspTouchV2 extends Protocol {
   static final version = 0;
