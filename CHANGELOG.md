@@ -1,3 +1,7 @@
+## 1.0.1
+
+- Fixed license badge and repo url.
+
 ## 1.0.0
 
 - Initial version.
