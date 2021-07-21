@@ -1,6 +1,6 @@
 # esp_smartconfig
 
-[![pub version](https://img.shields.io/pub/v/esp_smartconfig?color=blue&logo=dart&style=for-the-badge)](https://pub.dev/packages/esp_smartconfig) ![license](https://img.shields.io/github/license/abobija/esp_smartconfig?style=for-the-badge)
+[![pub version](https://img.shields.io/pub/v/esp_smartconfig?color=blue&logo=dart&style=for-the-badge)](https://pub.dev/packages/esp_smartconfig) ![license](https://img.shields.io/github/license/abobija/esp-smartconfig-dart?style=for-the-badge)
 
 The SmartConfig<sup>TM</sup> is a provisioning technology to connect a new Wi-Fi device to a Wi-Fi network.
 
