@@ -19,10 +19,10 @@ class ProvisioningRequest {
   /// Not required if WiFi network is Public (not protected)
   final Int8List? password;
 
-  /// Reserved data (max length: 127 bytes)
+  /// Reserved data for EspTouchV2 (max length: 127 bytes)
   final Int8List? reservedData;
 
-  /// Encryption key used for EspTouch2 (null or fixed length of 16 bytes)
+  /// Encryption key for EspTouchV2 (null or fixed length of 16 bytes)
   final Int8List? encryptionKey;
 
   ProvisioningRequest({

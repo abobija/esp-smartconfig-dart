@@ -110,7 +110,7 @@ class Provisioner {
     final _logger = worker.logger;
     final protocol = worker.protocol;
 
-    _logger.info("Povisioning ($protocol) starting...");
+    _logger.info("$protocol povisioning");
 
     _logger.debug("ssid ${request.ssid}");
     _logger.debug("bssid ${request.bssid}");
@@ -157,7 +157,7 @@ class Provisioner {
               protocol.addResponse(response);
 
               _logger.info(
-                  "Received response, device bssid: ${response.deviceBssidString}");
+                  "Received response, device bssid: ${response.bssidText}");
 
               sPort.send(_EspWorkerEvent.result(response));
             } catch (e) {

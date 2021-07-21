@@ -4,25 +4,29 @@ import 'package:esp_smartconfig/src/provisioning_request.dart';
 
 /// Provisioning response
 class ProvisioningResponse {
-  /// Connected device BSSID
-  final Uint8List deviceBssid;
+  /// Device BSSID
+  final Uint8List bssid;
 
-  /// Friendly representation of [deviceBssid] in format aa:bb:cc:dd:ee:ff
-  late final String deviceBssidString;
+  /// Device IP address (available only in EspTouchV1 protocol)
+  Uint8List? ipAddress;
 
-  ProvisioningResponse(this.deviceBssid) {
-    if (deviceBssid.length != ProvisioningRequest.bssidLength) {
+  /// Textual representation of [bssid] in format aa:bb:cc:dd:ee:ff
+  String get bssidText
+    => bssid.map((b) => b.toRadixString(16).padLeft(2, '0')).join(':');
+  
+  /// Textual representation of [ipAddress]
+  String? get ipAddressText => ipAddress?.join('.');
+
+  ProvisioningResponse(this.bssid, { this.ipAddress }) {
+    if (bssid.length != ProvisioningRequest.bssidLength) {
       throw ArgumentError("Invalid BSSID");
     }
-
-    deviceBssidString =
-        deviceBssid.map((b) => b.toRadixString(16).padLeft(2, '0')).join(':');
   }
 
-  /// Equality checking by [deviceBssid]
+  /// Equality checking by [bssid]
   bool operator ==(Object result) {
     if (result is ProvisioningResponse) {
-      return bssidsAreEqual(result.deviceBssid, deviceBssid);
+      return bssidsAreEqual(result.bssid, bssid);
     }
 
     return false;
@@ -46,5 +50,10 @@ class ProvisioningResponse {
   int get hashCode => super.hashCode;
 
   @override
-  String toString() => "$deviceBssid";
+  String toString() {
+    return (StringBuffer()..writeAll([
+      "bssid=$bssidText",
+      ipAddress == null ? '' : ", ip=$ipAddressText",
+    ])).toString();
+  }
 }

@@ -4,15 +4,15 @@ import 'package:esp_smartconfig/esp_smartconfig.dart';
 import 'package:loggerx/loggerx.dart';
 
 void main() async {
-  logging.level = LogLevel.verbose;
+  logging.level = LogLevel.debug;
 
   final provisioner = Provisioner.espTouch();
 
   provisioner.onResponse.listen((response) {
     log.info("\n"
-        "\n---------------------------------------------------------\n"
-        "Device (bssid=${response.deviceBssidString}) is connected to WiFi!"
-        "\n---------------------------------------------------------\n");
+        "\n------------------------------------------------------------------------\n"
+        "Device ($response) is connected to WiFi!"
+        "\n------------------------------------------------------------------------\n");
   });
 
   try {
@@ -22,7 +22,7 @@ void main() async {
       password: "renault19",
     ));
 
-    await Future.delayed(Duration(seconds: 10));
+    await Future.delayed(Duration(seconds: 5));
   } catch (e, s) {
     log.error(e, s);
   }

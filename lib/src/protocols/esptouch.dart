@@ -20,7 +20,7 @@ class EspTouch extends Protocol {
   final _dataBN = BottleNeck(17);
 
   @override
-  String get name => "EspTouch v1";
+  String get name => "EspTouch";
 
   @override
   List<int> get ports => [18266];
@@ -62,9 +62,9 @@ class EspTouch extends Protocol {
 
     index++; // skip xor place
 
-    Uint8List(_ipLen).forEach((octet) {
+    Protocol.broadcastAddress.rawAddress.forEach((octet) {
       xor ^= octet;
-      dataCodes.addAll(_dataCode(0, index++));
+      dataCodes.addAll(_dataCode(octet, index++));
     });
 
     if(request.password != null) {
@@ -132,7 +132,15 @@ class EspTouch extends Protocol {
 
   @override
   ProvisioningResponse receive(Uint8List data) {
-    // TODO: implement esptouch receive
-    throw UnimplementedError();
+    if(data.length != 11 || data[0] != 30) {
+      throw InvalidProvisioningResponseDataException(
+        "Invalid data($data) {.length != 11 || [0] != 30}"
+      );
+    }
+
+    return ProvisioningResponse(
+      Uint8List(6)..setAll(0, data.skip(1).take(6)),
+      ipAddress: Uint8List(4)..setAll(0, data.skip(7).take(4))
+    );
   }
 }

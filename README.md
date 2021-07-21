@@ -8,11 +8,44 @@ The advantage of this technology is that the device does not need to directly kn
 
 ## Implemented protocols
 
+> *NOTE: All protocols currently supports only in **broadcast** mode.*
+
+- EspTouch
 - EspTouch V2
 
-## Examples
+## Example
 
-Several examples of using this library are available in [example](example) folder.
+> *Several examples of using this library are available in [**example folder**](example).*
+
+```dart
+import 'package:esp_smartconfig/esp_smartconfig.dart';
+
+final provisioner = Provisioner.espTouch();
+
+provisioner.onResponse.listen((response) {
+    print("Device ${response.bssidText} connected to WiFi!");
+});
+
+try {
+    await provisioner.start(ProvisioningRequest.fromStrings(
+        ssid: "NETWORK NAME",
+        bssid: "ROUTER BSSID",
+        password: "NETWORK PASSWORD",
+    ));
+
+    // If you are going to use this library in Flutter
+    // this is good place to show some Dialog and wait for exit
+    //
+    // Or simply you can delay with Future.delayed function
+    await Future.delayed(Duration(seconds: 10));
+} catch (e, s) {
+    print(e);
+}
+
+// Provisioning does not have any timeout so it needs to be
+// stopped manually
+provisioner.stop();
+```
 
 ## Author
 

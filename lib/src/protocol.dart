@@ -58,7 +58,7 @@ abstract class Protocol {
   /// This is good place to send data
   void loop(int stepMs, Timer timer);
 
-  /// Find response in [_responsesList] by [deviceBssid]
+  /// Find response in [_responsesList] by [bssid]
   ProvisioningResponse? findResponse(ProvisioningResponse response) {
     for (var r in _responsesList) {
       if (r == response) {
@@ -73,9 +73,11 @@ abstract class Protocol {
   ///
   /// Throws [ProvisioningResponseAlreadyReceivedError] if same response already exists
   ProvisioningResponse addResponse(ProvisioningResponse response) {
-    if (findResponse(response) != null) {
+    final foundResponse = findResponse(response);
+    
+    if (foundResponse != null) {
       throw ProvisioningResponseAlreadyReceivedError(
-          "Response with deviceBssid=${response.deviceBssidString} already received");
+          "Response ($foundResponse) already received");
     }
 
     _responsesList.add(response);
