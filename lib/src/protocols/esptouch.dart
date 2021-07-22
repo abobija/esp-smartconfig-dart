@@ -13,9 +13,6 @@ class EspTouch extends Protocol {
   @override
   String get name => "EspTouch";
 
-  @override
-  List<int> get ports => [18266];
-
   late int _expectedResponseFirstByte;
 
   @override
@@ -38,32 +35,21 @@ class EspTouch extends Protocol {
     int xor = 0;
     int index = 0;
 
-    for (var b in [totalLen, pwdLen, crc(request.ssid), crc(request.bssid)]) {
-      dataCodes.addAll(_dataCode(b, index++));
-      xor ^= b;
-    }
+    [
+      [totalLen, pwdLen, crc(request.ssid), crc(request.bssid)],
+      Protocol.broadcastAddress.rawAddress,
+      request.password ?? [],
+      request.ssid,
+    ].forEach((data) => data.forEach((byte) {
+          xor ^= byte;
+          dataCodes.addAll(_dataCode(u8(byte), index++));
+          if (index == 4) {
+            // skip xor place
+            index++;
+          }
+        }));
 
-    index++; // skip xor place
-
-    Protocol.broadcastAddress.rawAddress.forEach((octet) {
-      xor ^= octet;
-      dataCodes.addAll(_dataCode(octet, index++));
-    });
-
-    if (request.password != null) {
-      request.password!.forEach((b) {
-        final u = u8(b);
-        xor ^= u;
-        dataCodes.addAll(_dataCode(u, index++));
-      });
-    }
-
-    request.ssid.forEach((b) {
-      int u = u8(b);
-      xor ^= u;
-      dataCodes.addAll(_dataCode(u, index++));
-    });
-
+    // insert xor
     dataCodes.insertAll(4 * _dataCodeLen, _dataCode(xor, 4));
 
     var bssidIndex = totalLen;

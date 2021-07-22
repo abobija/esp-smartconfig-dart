@@ -41,7 +41,7 @@ abstract class Protocol {
   /// Provisioner will take one port after the another and try to open it.
   /// After first successfully opened port provisioner will stop and set
   /// the [portIndex] of opened port
-  List<int> get ports;
+  List<int> get ports => [18266];
 
   /// Blocks that needs to be transmitted to device
   final blocks = <int>[];
@@ -168,6 +168,9 @@ abstract class Protocol {
 
   /// Returns encrypted [data] that is encrypted with the [key]
   Int8List encrypt(Int8List data, Int8List key) => Aes.encrypt(data, key);
+
+  /// Returns true if [data] is encoded
+  bool isEncoded(Int8List data) => data.any((byte) => byte.isNegative);
 
   @override
   String toString() => name;

@@ -174,20 +174,20 @@ class EspTouchV2 extends Protocol {
   Int8List _head() {
     final headTmp = <int>[];
 
-    isSsidEncoded = _isDataEncoded(request.ssid);
+    isSsidEncoded = isEncoded(request.ssid);
     headTmp.add(request.ssid.length | (_isSsidEncoded ? 0x80 : 0));
 
     if (request.password == null) {
       headTmp.add(0);
     } else {
-      isPasswordEncoded = _isDataEncoded(request.password!);
+      isPasswordEncoded = isEncoded(request.password!);
       headTmp.add(request.password!.length | (_isPasswordEncoded ? 0x80 : 0));
     }
 
     if (request.reservedData == null) {
       headTmp.add(0);
     } else {
-      isReservedDataEncoded = _isDataEncoded(request.reservedData!);
+      isReservedDataEncoded = isEncoded(request.reservedData!);
       headTmp.add(
           request.reservedData!.length | (_isReservedDataEncoded ? 0x80 : 0));
     }
@@ -261,17 +261,7 @@ class EspTouchV2 extends Protocol {
   int _dataBlock(int data, int idx) => ((idx << 7) | (1 << 6) | data);
 
   Int8List _padding(int factor, Int8List? data) {
-    int length = factor - (data == null ? 0 : data.length) % factor;
+    final length = factor - (data?.length ?? 0) % factor;
     return Int8List(length < factor ? length : 0);
-  }
-
-  bool _isDataEncoded(Int8List data) {
-    for (var b in data) {
-      if (b < 0) {
-        return true;
-      }
-    }
-
-    return false;
   }
 }
