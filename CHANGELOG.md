@@ -1,3 +1,7 @@
+## 1.1.2
+
+- README updated
+
 ## 1.1.1
 
 - Expose `ProvisioningResponse`
