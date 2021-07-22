@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:esp_smartconfig/src/aes.dart';
+import 'package:esp_smartconfig/src/bottleneck.dart';
 import 'package:esp_smartconfig/src/crc.dart';
 import 'package:esp_smartconfig/src/provisioning_request.dart';
 import 'package:esp_smartconfig/src/provisioning_response.dart';
@@ -30,6 +31,9 @@ abstract class Protocol {
   /// Provisioning request
   late final ProvisioningRequest request;
 
+  /// Protocol bottlenecker
+  final bottleneck = Bottleneck(15);
+
   /// Logger
   late final Logger logger;
 
@@ -42,7 +46,39 @@ abstract class Protocol {
   /// Blocks that needs to be transmitted to device
   final blocks = <int>[];
 
+  int _blockIndex = 0;
+
   final _responsesList = <ProvisioningResponse>[];
+
+  /// Send block and return index of sent block.
+  /// 
+  /// If sending is gonna be sent through the [bottleneck], and
+  /// [bottleneck] has not pass, function will return null which means
+  /// that block is not sent in [bottleneck] flow
+  int? sendBlock({ Bottleneck? bottleneck, Function()? onAllBlocksSent }) {
+    int? sentBlockIndex;
+
+    void _() {
+      sentBlockIndex = _blockIndex;
+      send(Uint8List(blocks[_blockIndex++]));
+
+      if(_blockIndex >= blocks.length) {
+        _blockIndex = 0;
+
+        if(onAllBlocksSent != null) {
+          onAllBlocksSent();
+        }
+      }
+    }
+
+    if(bottleneck != null) {
+      bottleneck.flow(_);
+    } else {
+      _();
+    }
+
+    return sentBlockIndex;
+  }
 
   /// Protocol setup.
   /// Prepare package, set variables, etc...
@@ -54,9 +90,11 @@ abstract class Protocol {
     this.logger = logger;
   }
 
-  /// Loop is invoked by provisioner [timer] in very short [stepMs] intervals, typically 1-10 ms.
-  /// This is good place to send data
-  void loop(int stepMs, Timer timer);
+  /// Loop is invoked by provisioner [timer]
+  /// in very short [stepMs] intervals, typically 1-20 ms.
+  void loop(int stepMs, Timer timer) {
+    sendBlock(bottleneck: bottleneck);
+  }
 
   /// Find response in [_responsesList] by [bssid]
   ProvisioningResponse? findResponse(ProvisioningResponse response) {
@@ -84,14 +122,22 @@ abstract class Protocol {
     return response;
   }
 
-  /// Receive data
-  ///
-  /// Throws [InvalidProvisioningResponseDataException] if data of received response is invalid
-  ProvisioningResponse receive(Uint8List data);
 
-  /// Sends a data [buffer]
+  /// Sends a [buffer]
   int send(List<int> buffer) {
     return _socket.send(buffer, broadcastAddress, devicePort);
+  }
+
+  /// Receive data and returns response with device BSSID
+  ///
+  /// Throws [InvalidProvisioningResponseDataException] if data of received response is invalid
+  ProvisioningResponse receive(Uint8List data) {
+    if (data.length < 7) {
+      throw InvalidProvisioningResponseDataException(
+          "Invalid data ($data). Length should be at least 7 elements");
+    }
+
+    return ProvisioningResponse(Uint8List(6)..setAll(0, data.skip(1).take(6)));
   }
 
   /// Number of milliseconds since Unix epoch
@@ -124,22 +170,4 @@ abstract class Protocol {
 
   @override
   String toString() => name;
-}
-
-/// Bottle neck
-class BottleNeck {
-  /// Delay in milliseconds
-  final int delay;
-  int _previous = 0;
-
-  BottleNeck(this.delay);
-
-  void exec(Function fn) {
-    final ms = Protocol.ms();
-
-    if (ms - _previous > delay) {
-      fn();
-      _previous = ms;
-    }
-  }
 }

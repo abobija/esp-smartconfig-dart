@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -12,12 +11,6 @@ class EspTouch extends Protocol {
   static final _extraHeadLen = 5;
   static final _extraLen = 40;
   static final _dataCodeLen = 3;
-  static final _guideLen = 4;
-  static final _guideSendingDurationMs = 2000;
-  static final _dataSendingDurationMs = 4000;
-  static final _iterationDataLen = 3;
-  final _guideBN = BottleNeck(30);
-  final _dataBN = BottleNeck(17);
 
   @override
   String get name => "EspTouch";
@@ -26,15 +19,6 @@ class EspTouch extends Protocol {
   List<int> get ports => [18266];
 
   late int _expectedResponseFirstByte;
-  int _previousMs = 0;
-
-  /// Pointer to data block which needs to be sent next
-  int _dataPointer = 0;
-
-  Iterable<int> get _guide => blocks.take(_guideLen);
-
-  Iterable<int> _data(int start) =>
-      blocks.skip(_guideLen).skip(start).take(_iterationDataLen);
 
   @override
   void setup(RawDatagramSocket socket, int portIndex,
@@ -112,37 +96,23 @@ class EspTouch extends Protocol {
     ].map((e) => e + _extraLen).toList());
   }
 
-  @override
-  void loop(int stepMs, Timer timer) {
-    final ms = millis();
-    final diffMs = ms - _previousMs;
-
-    if (diffMs >= _dataSendingDurationMs) {
-      _previousMs = millis();
-      _dataPointer = 0;
-    } else if (diffMs >= _guideSendingDurationMs) {
-      // send data
-      _dataBN.exec(() {
-        _data(_dataPointer).forEach((b) => send(Uint8List(b)));
-        _dataPointer =
-            (_dataPointer + _iterationDataLen) % (blocks.length - _guideLen);
-      });
-    } else {
-      // send guide
-      _guideBN.exec(() {
-        _guide.forEach((b) => send(Uint8List(b)));
-      });
-    }
-  }
-
+  /// Receive data and returns response with device BSSID and IP address
+  /// 
+  /// Throws [InvalidProvisioningResponseDataException] if received data is not valid
   @override
   ProvisioningResponse receive(Uint8List data) {
-    if (data.length != 11 || data[0] != _expectedResponseFirstByte) {
+    final response = super.receive(data);
+
+    if (data[0] != _expectedResponseFirstByte) {
       throw InvalidProvisioningResponseDataException(
-          "Invalid data($data) {.length != 11 || [0] != $_expectedResponseFirstByte}");
+          "Invalid data($data): [0] != $_expectedResponseFirstByte}");
     }
 
-    return ProvisioningResponse(Uint8List(6)..setAll(0, data.skip(1).take(6)),
-        ipAddress: Uint8List(4)..setAll(0, data.skip(7).take(4)));
+    if(data.length >= 11) {
+      // there is IP address
+      response.ipAddress = Uint8List(4)..setAll(0, data.skip(7).take(4));
+    }
+
+    return response;
   }
 }

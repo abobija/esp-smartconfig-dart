@@ -1,19 +1,12 @@
 import 'dart:io';
-import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:esp_smartconfig/src/protocol.dart';
 import 'package:esp_smartconfig/src/provisioning_request.dart';
-import 'package:esp_smartconfig/src/provisioning_response.dart';
-import 'package:esp_smartconfig/src/exceptions.dart';
 import 'package:loggerx/loggerx.dart';
 
 class EspTouchV2 extends Protocol {
   static final version = 0;
-
-  static final _defaultSendIntervalMs = 15;
-  static final _slowIntervalMs = 100;
-  static final _slowIntervalThresholdMs = 20 * 1000;
 
   @override
   String get name => "EspTouch V2";
@@ -21,11 +14,7 @@ class EspTouchV2 extends Protocol {
   @override
   List<int> get ports => [18266, 28266, 38266, 48266];
 
-  int _stepCounter = 0;
-  int _intervalMs = _defaultSendIntervalMs;
-
   late Int8List _buffer;
-  int _blockPointer = 0;
 
   var _isSsidEncoded = false;
   var _isPasswordEncoded = false;
@@ -186,42 +175,6 @@ class EspTouchV2 extends Protocol {
     }
 
     _updateBlocksForSequencesLength(count);
-  }
-
-  @override
-  void loop(int stepMs, Timer timer) {
-    if (++_stepCounter * stepMs < _intervalMs) {
-      return;
-    }
-
-    _stepCounter = 0;
-
-    if (_blockPointer < blocks.length) {
-      send(Int8List(blocks[_blockPointer++]));
-    } else {
-      _blockPointer = 0;
-
-      logger.verbose("${blocks.length} blocks has been sent");
-
-      if (_intervalMs != _slowIntervalMs &&
-          timer.tick * stepMs >= _slowIntervalThresholdMs) {
-        _intervalMs = _slowIntervalMs;
-        logger.debug("Switched to slow interval of ${_slowIntervalMs}ms");
-      }
-    }
-  }
-
-  @override
-  ProvisioningResponse receive(Uint8List data) {
-    if (data.length < 7) {
-      throw InvalidProvisioningResponseDataException(
-          "Invalid data ($data). Length should be at least 7 elements");
-    }
-
-    final deviceBssid = Uint8List(6);
-    deviceBssid.setAll(0, data.skip(1).take(6));
-
-    return ProvisioningResponse(deviceBssid);
   }
 
   Int8List _head() {
