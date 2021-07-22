@@ -92,7 +92,7 @@ class EspTouch extends Protocol {
   }
 
   /// Receive data and returns response with device BSSID and IP address
-  /// 
+  ///
   /// Throws [InvalidProvisioningResponseDataException] if received data is not valid
   @override
   ProvisioningResponse receive(Uint8List data) {
@@ -103,7 +103,7 @@ class EspTouch extends Protocol {
           "Invalid data($data): [0] != $_expectedResponseFirstByte}");
     }
 
-    if(data.length >= 11) {
+    if (data.length >= 11) {
       // there is IP address
       response.ipAddress = Uint8List(4)..setAll(0, data.skip(7).take(4));
     }

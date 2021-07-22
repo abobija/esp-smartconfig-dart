@@ -41,9 +41,9 @@ class Provisioner {
 
   /// Subscribe to provisioner events stream
   StreamSubscription<ProvisioningResponse> listen(
-    void Function(ProvisioningResponse)? onData,
-    { Function? onError, void Function()? onDone }
-  ) {
+      void Function(ProvisioningResponse)? onData,
+      {Function? onError,
+      void Function()? onDone}) {
     return _streamCtrl.stream.listen(
       onData,
       onError: onError,
@@ -194,20 +194,23 @@ class Provisioner {
     }
 
     // Install and prepare protocol
-    protocol..install(_socket, p, request, _logger)..prepare();
+    protocol
+      ..install(_socket, p, request, _logger)
+      ..prepare();
 
     _logger.verbose("blocks ${protocol.blocks}");
 
     // Protocol loop function execution in short time intervals
     final tmrDuration = Duration(milliseconds: 5);
-    Timer.periodic(tmrDuration, (t) => protocol.loop(tmrDuration.inMilliseconds, t));
+    Timer.periodic(
+        tmrDuration, (t) => protocol.loop(tmrDuration.inMilliseconds, t));
 
     sPort.send(_EspWorkerEvent.started());
   }
 
   /// Stop provisioning that is previously started with [start] method
   void stop() {
-    if(!_streamCtrl.isClosed) {
+    if (!_streamCtrl.isClosed) {
       _streamCtrl.close();
     }
 

@@ -51,27 +51,27 @@ abstract class Protocol {
   final _responsesList = <ProvisioningResponse>[];
 
   /// Send block and return index of sent block.
-  /// 
+  ///
   /// If sending is gonna be sent through the [bottleneck], and
   /// [bottleneck] has not pass, function will return null which means
   /// that block is not sent in [bottleneck] flow
-  int? sendBlock({ Bottleneck? bottleneck, Function()? onAllBlocksSent }) {
+  int? sendBlock({Bottleneck? bottleneck, Function()? onAllBlocksSent}) {
     int? sentBlockIndex;
 
     void _() {
       sentBlockIndex = _blockIndex;
       send(Uint8List(blocks[_blockIndex++]));
 
-      if(_blockIndex >= blocks.length) {
+      if (_blockIndex >= blocks.length) {
         _blockIndex = 0;
 
-        if(onAllBlocksSent != null) {
+        if (onAllBlocksSent != null) {
           onAllBlocksSent();
         }
       }
     }
 
-    if(bottleneck != null) {
+    if (bottleneck != null) {
       bottleneck.flow(_);
     } else {
       _();
@@ -90,7 +90,7 @@ abstract class Protocol {
   }
 
   /// Prepare package, set variables, etc...
-  void prepare() { }
+  void prepare() {}
 
   /// Loop is invoked by provisioner [timer]
   /// in very short [stepMs] intervals, typically 1-20 ms.
@@ -123,7 +123,6 @@ abstract class Protocol {
     _responsesList.add(response);
     return response;
   }
-
 
   /// Sends a [buffer]
   int send(List<int> buffer) {

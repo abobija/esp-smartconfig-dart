@@ -1,3 +1,9 @@
+## 1.1.0
+
+- Common protocols send bottlenecking
+- Simplified subscribing to provisioner stream
+- Exceptions inline docs
+
 ## 1.0.2
 
 - Fixed receiving response (first byte) for EspTouch.
