@@ -1,6 +1,6 @@
 name: esp_smartconfig
 description: Implementations of EspTouch and EspTouchV2 SmartConfig provisioning protocols. No platform specific.
-version: 1.1.0
+version: 1.1.1
 homepage: https://abobija.com
 repository: https://github.com/abobija/esp-smartconfig-dart
 

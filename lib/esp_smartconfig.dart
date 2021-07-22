@@ -3,4 +3,5 @@ library esp_smartconfig;
 
 export 'src/provisioner.dart';
 export 'src/provisioning_request.dart';
+export 'src/provisioning_response.dart';
 export 'src/exceptions.dart';

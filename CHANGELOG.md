@@ -1,3 +1,7 @@
+## 1.1.1
+
+- Expose `ProvisioningResponse`
+
 ## 1.1.0
 
 - Common protocols send bottlenecking
