@@ -8,7 +8,7 @@ void main() async {
 
   final provisioner = Provisioner.espTouchV2();
 
-  provisioner.onResponse.listen((response) {
+  provisioner.listen((response) {
     log.info("\n"
         "\n---------------------------------------------------------\n"
         "Device ($response) is connected to WiFi!"

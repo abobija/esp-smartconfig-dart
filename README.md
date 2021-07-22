@@ -22,7 +22,7 @@ import 'package:esp_smartconfig/esp_smartconfig.dart';
 
 final provisioner = Provisioner.espTouch();
 
-provisioner.onResponse.listen((response) {
+provisioner.listen((response) {
     print("Device ${response.bssidText} connected to WiFi!");
 });
 

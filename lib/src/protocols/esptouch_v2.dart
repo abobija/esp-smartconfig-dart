@@ -1,9 +1,6 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:esp_smartconfig/src/protocol.dart';
-import 'package:esp_smartconfig/src/provisioning_request.dart';
-import 'package:loggerx/loggerx.dart';
 
 class EspTouchV2 extends Protocol {
   static final version = 0;
@@ -54,10 +51,7 @@ class EspTouchV2 extends Protocol {
       (request.password != null || request.reservedData != null);
 
   @override
-  void setup(RawDatagramSocket socket, int portIndex,
-      ProvisioningRequest request, Logger logger) {
-    super.setup(socket, portIndex, request, logger);
-
+  void prepare() {
     final dataTmp = <int>[];
 
     dataTmp.addAll(_head());

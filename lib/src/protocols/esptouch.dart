@@ -1,10 +1,8 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:esp_smartconfig/esp_smartconfig.dart';
 import 'package:esp_smartconfig/src/protocol.dart';
 import 'package:esp_smartconfig/src/provisioning_response.dart';
-import 'package:loggerx/loggerx.dart';
 
 class EspTouch extends Protocol {
   static final _ipLen = 4; // ipv4
@@ -21,10 +19,7 @@ class EspTouch extends Protocol {
   late int _expectedResponseFirstByte;
 
   @override
-  void setup(RawDatagramSocket socket, int portIndex,
-      ProvisioningRequest request, Logger logger) {
-    super.setup(socket, portIndex, request, logger);
-
+  void prepare() {
     _expectedResponseFirstByte =
         request.ssid.length + (request.password?.length ?? 0) + 9;
 

@@ -20,21 +20,11 @@ class Provisioner {
   /// Provisioning isolate
   Isolate? _isolate;
 
+  /// Provisioner running indicator
+  bool get running => _isolate != null;
+
   /// Responses stream controller
-  final _onResponseCtrl = StreamController<ProvisioningResponse>();
-
-  /// Stream of responses
-  Stream<ProvisioningResponse> get onResponse => _onResponseCtrl.stream;
-
-  /// Close response stream controller.
-  /// If stream is already closed this function will do nothing
-  void _closeResponseStream() {
-    if (_onResponseCtrl.isClosed) {
-      return;
-    }
-
-    _onResponseCtrl.close();
-  }
+  final _streamCtrl = StreamController<ProvisioningResponse>();
 
   /// Constructor for new EspProvisioner with desired [protocol]
   Provisioner._(this._protocol);
@@ -49,12 +39,25 @@ class Provisioner {
     return Provisioner._(EspTouch());
   }
 
+  /// Subscribe to provisioner events stream
+  StreamSubscription<ProvisioningResponse> listen(
+    void Function(ProvisioningResponse)? onData,
+    { Function? onError, void Function()? onDone }
+  ) {
+    return _streamCtrl.stream.listen(
+      onData,
+      onError: onError,
+      onDone: onDone,
+      cancelOnError: true,
+    );
+  }
+
   /// Start provisioning using [request]
   ///
   /// Provisioning will not stop automatically.
   /// It needs to be stopped manually by calling [stop] method
   Future<void> start(ProvisioningRequest request) async {
-    if (_isolate != null) {
+    if (running) {
       throw ProvisioningException("Provisioning already runing");
     }
 
@@ -64,28 +67,36 @@ class Provisioner {
     final worker =
         _EspWorker(request: request, logger: _logger, protocol: _protocol);
 
-    rPort.listen((data) {
-      if (data is _EspWorkerEvent) {
-        switch (data.type) {
+    rPort.listen((event) {
+      if (event is _EspWorkerEvent) {
+        switch (event.type) {
           case _EspWorkerEventType.init:
-            (data.data as SendPort).send(worker);
+            (event.data as SendPort).send(worker);
             break;
           case _EspWorkerEventType.exception:
-            stop();
+            _logger.error(event.data);
 
             if (!completer.isCompleted) {
-              completer.completeError(data);
+              // failed to start provisioner
+              completer.completeError(event.data);
+            } else {
+              _streamCtrl.sink.addError(event.data);
+
+              // stop provisioning on any runtime error
+              stop();
             }
             break;
           case _EspWorkerEventType.started:
+            _logger.info("Provisioning started");
             completer.complete();
             break;
           case _EspWorkerEventType.response:
-            _onResponseCtrl.sink.add(data.data);
+            _logger.info("Received response (${event.data}");
+            _streamCtrl.sink.add(event.data);
             break;
         }
       } else {
-        _logger.debug("Unhandled message from isolate: $data");
+        _logger.warning("Unhandled message from isolate: $event");
       }
     });
 
@@ -110,13 +121,15 @@ class Provisioner {
     final _logger = worker.logger;
     final protocol = worker.protocol;
 
-    _logger.info("$protocol povisioning");
+    _logger.debug("$protocol povisioning");
 
+    _logger.debug("---------- Request ----------");
     _logger.debug("ssid ${request.ssid}");
     _logger.debug("bssid ${request.bssid}");
     _logger.debug("pwd ${request.password}");
     _logger.debug("rData ${request.reservedData}");
     _logger.debug("encriptionKey ${request.encryptionKey}");
+    _logger.debug("-----------------------------");
 
     int p = 0;
     RawDatagramSocket? _socket;
@@ -155,13 +168,9 @@ class Provisioner {
               }
 
               protocol.addResponse(response);
-
-              _logger.info(
-                  "Received response, device bssid: ${response.bssidText}");
-
               sPort.send(_EspWorkerEvent.result(response));
             } catch (e) {
-              _logger.warning("Invalid response: $e");
+              sPort.send(_EspWorkerEvent.exception("Invalid response: $e"));
             }
           },
           onError: (err, s) {
@@ -171,7 +180,7 @@ class Provisioner {
           cancelOnError: true,
         );
 
-        _logger.debug("UDP socket on port ${ports[p]} created");
+        _logger.debug("UDP socket on port ${ports[p]} successfully created");
         break;
       } catch (e) {
         sPort.send(_EspWorkerEvent.exception("UDP port bind failed: $e"));
@@ -180,35 +189,33 @@ class Provisioner {
     }
 
     if (_socket == null) {
-      final ev = _EspWorkerEvent.exception("Create UDP socket failed");
-      _logger.error(ev.data);
-      sPort.send(ev);
+      sPort.send(_EspWorkerEvent.exception("Create UDP socket failed"));
       return;
     }
 
-    protocol.setup(_socket, p, request, _logger);
+    // Install and prepare protocol
+    protocol..install(_socket, p, request, _logger)..prepare();
 
     _logger.verbose("blocks ${protocol.blocks}");
 
-    int stepMs = 5;
-    Timer.periodic(
-        Duration(milliseconds: stepMs), (t) => protocol.loop(stepMs, t));
-
-    _logger.info("Provisioning started");
+    // Protocol loop function execution in short time intervals
+    final tmrDuration = Duration(milliseconds: 5);
+    Timer.periodic(tmrDuration, (t) => protocol.loop(tmrDuration.inMilliseconds, t));
 
     sPort.send(_EspWorkerEvent.started());
   }
 
   /// Stop provisioning that is previously started with [start] method
   void stop() {
-    if (_isolate == null) {
-      _logger.debug("Isolate already destroyed");
-    } else {
+    if(!_streamCtrl.isClosed) {
+      _streamCtrl.close();
+    }
+
+    if (running) {
       _logger.debug("Destroying isolate");
       _isolate!.kill(priority: Isolate.immediate);
       _isolate = null;
     }
-    _closeResponseStream();
 
     _logger.info("Provisioning stopped");
   }

@@ -80,15 +80,17 @@ abstract class Protocol {
     return sentBlockIndex;
   }
 
-  /// Protocol setup.
-  /// Prepare package, set variables, etc...
-  void setup(RawDatagramSocket socket, int portIndex,
+  /// Protocol installation
+  void install(RawDatagramSocket socket, int portIndex,
       ProvisioningRequest request, Logger logger) {
     _socket = socket;
     this.portIndex = portIndex;
     this.request = request;
     this.logger = logger;
   }
+
+  /// Prepare package, set variables, etc...
+  void prepare() { }
 
   /// Loop is invoked by provisioner [timer]
   /// in very short [stepMs] intervals, typically 1-20 ms.
