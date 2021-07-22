@@ -6,6 +6,12 @@ The SmartConfig<sup>TM</sup> is a provisioning technology to connect a new Wi-Fi
 
 The advantage of this technology is that the device does not need to directly know SSID or password of an Access Point (AP). Those information is provided using this library. This is particularly important to headless device and systems, due to their lack of a user interface.
 
+## Supported platforms
+
+All non-web platforms are supported. Web platform is not supported mainly because browsers does not allow UDP communication.
+
+If you are going to use this library on Desktop platforms make sure that UDP port `18266` is open for incoming data.
+
 ## Implemented protocols
 
 > *NOTE: All protocols currently supports only **broadcast** mode.*
