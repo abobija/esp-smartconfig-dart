@@ -1,3 +1,7 @@
+## 1.1.3
+
+- README updated (removed info about multicast mode)
+
 ## 1.1.2
 
 - README updated
