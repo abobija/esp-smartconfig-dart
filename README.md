@@ -6,8 +6,6 @@ This is **not** yet another wrapper around Java and ObjectiveC libraries from Es
 
 ## Implemented protocols
 
-> *NOTE: All protocols currently supports only **broadcast** mode. Multicast coming soon...*
-
 - EspTouch
 - EspTouch V2
 
