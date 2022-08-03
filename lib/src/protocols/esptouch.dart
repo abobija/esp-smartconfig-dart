@@ -2,7 +2,6 @@ import 'dart:typed_data';
 
 import 'package:esp_smartconfig/esp_smartconfig.dart';
 import 'package:esp_smartconfig/src/protocol.dart';
-import 'package:esp_smartconfig/src/provisioning_response.dart';
 
 class EspTouch extends Protocol {
   static final _ipLen = 4; // ipv4

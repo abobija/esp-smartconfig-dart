@@ -4,8 +4,6 @@ import 'dart:isolate';
 
 import 'package:esp_smartconfig/esp_smartconfig.dart';
 import 'package:esp_smartconfig/src/protocol.dart';
-import 'package:esp_smartconfig/src/provisioning_response.dart';
-import 'package:esp_smartconfig/src/exceptions.dart';
 import 'package:esp_smartconfig/src/protocols/esptouch.dart';
 import 'package:esp_smartconfig/src/protocols/esptouch_v2.dart';
 import 'package:loggerx/loggerx.dart';
