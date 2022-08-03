@@ -9,7 +9,7 @@ abstract class Aes {
   /// Encrypt data with the key
   static Int8List encrypt(Int8List data, Int8List key) {
     final cipher =
-        PaddedBlockCipherImpl(PKCS7Padding(), CBCBlockCipher(AESFastEngine()))
+        PaddedBlockCipherImpl(PKCS7Padding(), CBCBlockCipher(AESEngine()))
           ..init(
               true,
               PaddedBlockCipherParameters(
