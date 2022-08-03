@@ -1,3 +1,8 @@
+## 1.1.4
+
+- Dependencies versions bumps
+- Security update, deprecated AESFastEngine replaced with AESEngine
+
 ## 1.1.3
 
 - README updated (removed info about multicast mode)
