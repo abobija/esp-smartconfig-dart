@@ -154,17 +154,17 @@ class EspTouchV2 extends Protocol {
       final read =
           Int8List.fromList(_buffer.skip(offset).take(expectLength).toList());
       buf.setAll(0, read);
-      if (read.length <= 0) {
+      if (read.isEmpty) {
         break;
       }
       offset += read.length;
 
-      final _crc = crc(read);
+      final checksum = crc(read);
       if (expectLength < buf.length) {
-        buf.buffer.asByteData().setInt8(buf.length - 1, _crc);
+        buf.buffer.asByteData().setInt8(buf.length - 1, checksum);
       }
 
-      _createBlocksFor6Bytes(buf, count - 1, _crc, tailIsCrc);
+      _createBlocksFor6Bytes(buf, count - 1, checksum, tailIsCrc);
       count++;
     }
 

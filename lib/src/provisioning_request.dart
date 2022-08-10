@@ -89,7 +89,7 @@ class ProvisioningRequest {
 
     if (encryptionKey != null && encryptionKey!.length != encryptionKeyLength) {
       throw ArgumentError(
-          "Length of encryption key must be fixed ${encryptionKeyLength} bytes");
+          "Length of encryption key must be fixed $encryptionKeyLength bytes");
     }
   }
 }

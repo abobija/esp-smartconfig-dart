@@ -116,42 +116,42 @@ class Provisioner {
 
   static void _startProvisioning(_EspWorker worker, SendPort sPort) async {
     final request = worker.request;
-    final _logger = worker.logger;
+    final logger = worker.logger;
     final protocol = worker.protocol;
 
-    _logger.debug("$protocol povisioning");
+    logger.debug("$protocol povisioning");
 
-    _logger.debug("---------- Request ----------");
-    _logger.debug("ssid ${request.ssid}");
-    _logger.debug("bssid ${request.bssid}");
-    _logger.debug("pwd ${request.password}");
-    _logger.debug("rData ${request.reservedData}");
-    _logger.debug("encriptionKey ${request.encryptionKey}");
-    _logger.debug("-----------------------------");
+    logger.debug("---------- Request ----------");
+    logger.debug("ssid ${request.ssid}");
+    logger.debug("bssid ${request.bssid}");
+    logger.debug("pwd ${request.password}");
+    logger.debug("rData ${request.reservedData}");
+    logger.debug("encriptionKey ${request.encryptionKey}");
+    logger.debug("-----------------------------");
 
     int p = 0;
-    RawDatagramSocket? _socket;
+    RawDatagramSocket? socket;
 
     final ports = protocol.ports;
     for (; p < ports.length; p++) {
       try {
-        _logger.debug("Creating UDP socket on port ${ports[p]}");
+        logger.debug("Creating UDP socket on port ${ports[p]}");
 
-        _socket = await RawDatagramSocket.bind(
+        socket = await RawDatagramSocket.bind(
           InternetAddress.anyIPv4,
           ports[p],
           reuseAddress: true,
         );
 
-        _socket.broadcastEnabled = true;
+        socket.broadcastEnabled = true;
 
-        _socket.listen(
+        socket.listen(
           (event) {
             if (event != RawSocketEvent.read) {
               return;
             }
 
-            final pkg = _socket!.receive();
+            final pkg = socket!.receive();
 
             if (pkg == null) {
               return;
@@ -172,13 +172,13 @@ class Provisioner {
             }
           },
           onError: (err, s) {
-            _logger.error("Socket error", err, s);
+            logger.error("Socket error", err, s);
             sPort.send(_EspWorkerEvent.exception("Socket error: $err"));
           },
           cancelOnError: true,
         );
 
-        _logger.debug("UDP socket on port ${ports[p]} successfully created");
+        logger.debug("UDP socket on port ${ports[p]} successfully created");
         break;
       } catch (e) {
         sPort.send(_EspWorkerEvent.exception("UDP port bind failed: $e"));
@@ -186,17 +186,17 @@ class Provisioner {
       }
     }
 
-    if (_socket == null) {
+    if (socket == null) {
       sPort.send(_EspWorkerEvent.exception("Create UDP socket failed"));
       return;
     }
 
     // Install and prepare protocol
     protocol
-      ..install(_socket, p, request, _logger)
+      ..install(socket, p, request, logger)
       ..prepare();
 
-    _logger.verbose("blocks ${protocol.blocks}");
+    logger.verbose("blocks ${protocol.blocks}");
 
     // Protocol loop function execution in short time intervals
     final tmrDuration = Duration(milliseconds: 5);

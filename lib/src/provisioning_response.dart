@@ -23,15 +23,6 @@ class ProvisioningResponse {
     }
   }
 
-  /// Equality checking by [bssid]
-  bool operator ==(Object result) {
-    if (result is ProvisioningResponse) {
-      return bssidsAreEqual(result.bssid, bssid);
-    }
-
-    return false;
-  }
-
   static bool bssidsAreEqual(Uint8List bssid1, Uint8List bssid2) {
     if (bssid1.length != 6 || bssid2.length != 6) {
       throw ArgumentError("Invalid BSSID");
@@ -46,8 +37,18 @@ class ProvisioningResponse {
     return true;
   }
 
+  /// Equality checking by [bssid]
   @override
-  int get hashCode => super.hashCode;
+  bool operator ==(Object result) {
+    if (result is ProvisioningResponse) {
+      return bssidsAreEqual(result.bssid, bssid);
+    }
+
+    return false;
+  }
+  
+  @override
+  int get hashCode => bssid.hashCode;
 
   @override
   String toString() {

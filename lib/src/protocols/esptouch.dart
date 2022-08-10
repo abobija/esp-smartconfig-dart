@@ -34,29 +34,35 @@ class EspTouch extends Protocol {
     int xor = 0;
     int index = 0;
 
-    [
+    final packages = [
       [totalLen, pwdLen, crc(request.ssid), crc(request.bssid)],
       Protocol.broadcastAddress.rawAddress,
       request.password ?? [],
       request.ssid,
-    ].forEach((data) => data.forEach((byte) {
-          xor ^= byte;
-          dataCodes.addAll(_dataCode(u8(byte), index++));
-          if (index == 4) {
-            // skip xor place
-            index++;
-          }
-        }));
+    ];
+    
+    for(final data in packages) {
+      for(final byte in data) {
+        xor ^= byte;
+        dataCodes.addAll(_dataCode(u8(byte), index++));
+
+        if (index == 4) {
+          // skip xor place
+          index++;
+        }
+      }
+    }
 
     // insert xor
     dataCodes.insertAll(4 * _dataCodeLen, _dataCode(xor, 4));
 
     var bssidIndex = totalLen;
     var bssidInsertIndex = _extraHeadLen * _dataCodeLen;
-    request.bssid.forEach((b) {
-      dataCodes.insertAll(bssidInsertIndex, _dataCode(u8(b), bssidIndex++));
+
+    for(final byte in request.bssid) {
+      dataCodes.insertAll(bssidInsertIndex, _dataCode(u8(byte), bssidIndex++));
       bssidInsertIndex += 4 * _dataCodeLen;
-    });
+    }
 
     return dataCodes;
   }
@@ -66,13 +72,13 @@ class EspTouch extends Protocol {
       throw ArgumentError("Invalid index (> 127)");
     }
 
-    final _data = split8(u8);
-    final _crc = split8(crc(Int8List.fromList([u8, index])));
+    final data = split8(u8);
+    final checksum = split8(crc(Int8List.fromList([u8, index])));
 
     return Uint16List.fromList([
-      merge8(_crc[0], _data[0]),
+      merge8(checksum[0], data[0]),
       merge16(0x01, index),
-      merge8(_crc[1], _data[1]),
+      merge8(checksum[1], data[1]),
     ].map((e) => e + _extraLen).toList());
   }
 

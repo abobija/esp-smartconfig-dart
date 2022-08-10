@@ -20,9 +20,9 @@ abstract class Crc {
   static int calculate(Int8List data) {
     int value = 0x00;
 
-    data.forEach((e) {
+    for(var e in data) {
       value = _table[(e ^ value) & 0xff] ^ (value << 8);
-    });
+    }
 
     return value & 0xff;
   }
