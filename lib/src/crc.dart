@@ -20,7 +20,7 @@ abstract class Crc {
   static int calculate(Int8List data) {
     int value = 0x00;
 
-    for(var e in data) {
+    for (var e in data) {
       value = _table[(e ^ value) & 0xff] ^ (value << 8);
     }
 

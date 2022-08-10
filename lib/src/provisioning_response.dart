@@ -46,7 +46,7 @@ class ProvisioningResponse {
 
     return false;
   }
-  
+
   @override
   int get hashCode => bssid.hashCode;
 

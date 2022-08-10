@@ -40,9 +40,9 @@ class EspTouch extends Protocol {
       request.password ?? [],
       request.ssid,
     ];
-    
-    for(final data in packages) {
-      for(final byte in data) {
+
+    for (final data in packages) {
+      for (final byte in data) {
         xor ^= byte;
         dataCodes.addAll(_dataCode(u8(byte), index++));
 
@@ -59,7 +59,7 @@ class EspTouch extends Protocol {
     var bssidIndex = totalLen;
     var bssidInsertIndex = _extraHeadLen * _dataCodeLen;
 
-    for(final byte in request.bssid) {
+    for (final byte in request.bssid) {
       dataCodes.insertAll(bssidInsertIndex, _dataCode(u8(byte), bssidIndex++));
       bssidInsertIndex += 4 * _dataCodeLen;
     }
