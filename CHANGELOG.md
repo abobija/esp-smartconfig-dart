@@ -1,3 +1,7 @@
+## 1.1.5
+
+- Checking for the minimum length of WiFi password (according to WPA standard, minimumum length of password is 8 characters).
+
 ## 1.1.4
 
 - Dependencies versions bumps

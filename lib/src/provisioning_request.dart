@@ -4,6 +4,7 @@ import 'dart:typed_data';
 /// Provisioning request
 class ProvisioningRequest {
   static final ssidLengthMax = 32;
+  static final passwordLengthMin = 8;
   static final passwordLengthMax = 64;
   static final reservedDataLengthMax = 127;
   static final bssidLength = 6;
@@ -70,8 +71,15 @@ class ProvisioningRequest {
           "Invalid BSSID. Length should be $bssidLength. Got ${bssid.length}");
     }
 
-    if (password != null && password!.length > passwordLengthMax) {
-      throw ArgumentError("Password length is greater than $passwordLengthMax");
+    if (password != null) {
+      if (password!.length < passwordLengthMin) {
+        throw ArgumentError("Minimum length of password is $passwordLengthMin");
+      }
+
+      if (password!.length > passwordLengthMax) {
+        throw ArgumentError(
+            "Password length is greater than $passwordLengthMax");
+      }
     }
 
     if (reservedData != null && reservedData!.length > reservedDataLengthMax) {
