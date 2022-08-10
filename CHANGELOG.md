@@ -1,3 +1,7 @@
+## 1.1.7
+
+- Dart format
+
 ## 1.1.6
 
 - Resolved static analysis warnings and recommendations.
