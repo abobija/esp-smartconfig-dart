@@ -1,8 +1,10 @@
-# esp_smartconfig
+<center>
+<img src="docs/img/esp_smartconfig_abstract.png" />
 
 [![pub version](https://img.shields.io/pub/v/esp_smartconfig?color=blue&logo=dart&style=for-the-badge)](https://pub.dev/packages/esp_smartconfig) ![license](https://img.shields.io/github/license/abobija/esp-smartconfig-dart?style=for-the-badge)
+</center>
 
-This is **not** yet another wrapper around Java and ObjectiveC libraries from Espressif. This library has been written completely from skratch in plain Dart and supports all **non-web** platforms.
+Dart implementation of [EspTouch](https://www.espressif.com/en/products/software/esp-touch/overview) provisioner. Supports Android, iOS, Windows, Linux and iOS.
 
 ## Implemented protocols
 
