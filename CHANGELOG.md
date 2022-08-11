@@ -1,3 +1,7 @@
+## 1.1.8
+
+- Cover photo
+
 ## 1.1.7
 
 - Dart format
