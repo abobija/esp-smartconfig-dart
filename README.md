@@ -1,4 +1,4 @@
-<p align="center"><img src="assets/img/esp_smartconfig_abstract.png" alt="esp_smartconfig" /></p>
+<p align="center"><img src="https://github.com/abobija/esp-smartconfig-dart/raw/master/assets/img/esp_smartconfig_abstract.png" alt="esp_smartconfig" /></p>
 
 <div align="center">
     <a href="https://pub.dev/packages/esp_smartconfig"><img src="https://img.shields.io/pub/v/esp_smartconfig?color=blue&logo=dart&style=for-the-badge" alt="pub version" /></a>

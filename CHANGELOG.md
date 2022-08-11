@@ -1,3 +1,7 @@
+## 1.1.9
+
+- Using absolute url for cover photo since otherwise it's not shown on pub.dev
+
 ## 1.1.8
 
 - Cover photo
