@@ -1,8 +1,9 @@
-<center>
-<img src="docs/img/esp_smartconfig_abstract.png" />
+<p align="center"><img src="docs/img/esp_smartconfig_abstract.png" alt="esp_smartconfig" /></p>
 
-[![pub version](https://img.shields.io/pub/v/esp_smartconfig?color=blue&logo=dart&style=for-the-badge)](https://pub.dev/packages/esp_smartconfig) ![license](https://img.shields.io/github/license/abobija/esp-smartconfig-dart?style=for-the-badge)
-</center>
+<div align="center">
+    <a href="https://pub.dev/packages/esp_smartconfig"><img src="https://img.shields.io/pub/v/esp_smartconfig?color=blue&logo=dart&style=for-the-badge" alt="pub version" /></a>
+    <img src="https://img.shields.io/github/license/abobija/esp-smartconfig-dart?style=for-the-badge" alt="license" />
+</div>
 
 Dart implementation of [EspTouch](https://www.espressif.com/en/products/software/esp-touch/overview) provisioner. Supports Android, iOS, Windows, Linux and iOS.
 
