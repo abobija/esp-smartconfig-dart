@@ -5,7 +5,7 @@
     <img src="https://img.shields.io/github/license/abobija/esp-smartconfig-dart?style=for-the-badge" alt="license" />
 </div>
 
-Dart implementation of [EspTouch](https://www.espressif.com/en/products/software/esp-touch/overview) provisioner. Supports Android, iOS, Windows, Linux and iOS.
+Dart implementation of [EspTouch](https://www.espressif.com/en/products/software/esp-touch/overview) provisioner. Supports Android, iOS, Windows, Linux and macOS.
 
 ## Implemented protocols
 
