@@ -18,6 +18,10 @@ All non-web platforms are supported. Web platform is not supported mainly becaus
 
 > If you are going to use this library on Desktop platforms make sure that UDP port `18266` is open in firewall for incoming data.
 
+## Demo video
+
+[![Demo YouTube video](https://img.youtube.com/vi/yjxtwQ8Xpuo/mqdefault.jpg)](https://youtu.be/yjxtwQ8Xpuo)
+
 ## Example
 
 *Several examples of using this library are available in [**example folder**](example).*
