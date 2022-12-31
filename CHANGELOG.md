@@ -1,3 +1,7 @@
+## 1.1.11
+
+- Checking if isolate stream is open before sinking event data
+
 ## 1.1.10
 
 - YouTube demo video
