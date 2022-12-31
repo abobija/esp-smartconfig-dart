@@ -90,7 +90,7 @@ class Provisioner {
             break;
           case _EspWorkerEventType.response:
             _logger.info("Received response (${event.data}");
-            _streamCtrl.sink.add(event.data);
+            if (!_streamCtrl.isClosed) _streamCtrl.sink.add(event.data);
             break;
         }
       } else {
