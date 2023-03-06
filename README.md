@@ -18,6 +18,14 @@ All non-web platforms are supported. Web platform is not supported mainly becaus
 
 > If you are going to use this library on Desktop platforms make sure that UDP port `18266` is open in firewall for incoming data.
 
+##### Breaking Change iOS 14.6/16
+The breaking change was implemented with 14.6. However, it seems to be the case that the mentioned problem only occurs on devices with iOS version 16. It results in the fact that no connection to the ESP can be established. 
+
+**How to:**
+- You need an Apple-Developer account
+- After the Dev-Account has been approved, you have to make a request via this [form](https://developer.apple.com/contact/request/networking-multicast) to be allowed to use the Multicast Api.
+- Then you can follow this [guide](https://developer.apple.com/forums/thread/663271?answerId=639455022#639455022) (new process)
+
 ## Demo video
 
 [![Demo YouTube video](https://img.youtube.com/vi/yjxtwQ8Xpuo/mqdefault.jpg)](https://youtu.be/yjxtwQ8Xpuo)
