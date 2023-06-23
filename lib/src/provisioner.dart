@@ -141,6 +141,7 @@ class Provisioner {
           InternetAddress.anyIPv4,
           ports[p],
           reuseAddress: true,
+          reusePort: true
         );
 
         socket.broadcastEnabled = true;
