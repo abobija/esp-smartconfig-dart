@@ -1,3 +1,7 @@
+## 2.0.1
+
+- Fixed broken link of head image in README
+
 ## 2.0.0
 
 - Upgrade loggerx to v2
