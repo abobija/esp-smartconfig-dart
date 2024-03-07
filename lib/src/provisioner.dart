@@ -182,7 +182,6 @@ class Provisioner {
         break;
       } catch (e) {
         sPort.send(_EspWorkerEvent.exception("UDP port bind failed: $e"));
-        return;
       }
     }
 

@@ -1,3 +1,11 @@
+## 2.0.0
+
+- Upgrade loggerx to v2
+- Upgrade lints to v3
+- Set SDK constraints to ">=3 <4"
+- Bump other dependencies to align with lock file
+- Fix code warnings
+
 ## 1.1.11
 
 - Checking if isolate stream is open before sinking event data
