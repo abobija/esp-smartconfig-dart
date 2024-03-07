@@ -8,7 +8,7 @@ environment:
   sdk: '>=2.12.0 <3.0.0'
 
 dependencies: 
-  loggerx: ^1.3.6
+  loggerx: ^2.0.0
   pointycastle: ^3.6.2
 
 dev_dependencies:
