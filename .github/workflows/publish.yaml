@@ -1,0 +1,20 @@
+name: Publish package
+
+on:
+  # release:
+  #   types: [published]
+
+  # TODO: Remove when done experimenting
+  push:
+    branches:
+      - task/publish-workflow
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dart-lang/setup-dart@v1
+
+      - run: dart pub publish --dry-run
