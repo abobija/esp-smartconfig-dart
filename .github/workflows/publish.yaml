@@ -19,4 +19,4 @@ jobs:
           mkdir -p ~/.config/dart
           echo "$PUB_CREDENTIALS_CONTENT" > ~/.config/dart/pub-credentials.json
       
-      - run: dart pub publish
+      - run: dart pub publish --force
