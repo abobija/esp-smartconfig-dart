@@ -1,3 +1,7 @@
+## 2.0.4
+
+- Added Flutter App Demo Video to the README
+
 ## 2.0.3
 
 - Parameter `bssid` of `ProvisioningRequest`s factory `fromStrings` is not required anymore. If ommited, `bssid` will default to `00:00:00:00:00:00`. 
