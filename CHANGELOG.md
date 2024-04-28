@@ -1,3 +1,9 @@
+## 2.0.2
+
+- Implemented CI/CD with GitHub Actions
+    - Validate PR (while working on PR)
+    - Publish package to pub.dev (on publishing a release)
+
 ## 2.0.1
 
 - Fixed broken link of head image in README
