@@ -1,13 +1,8 @@
 name: Publish package
 
 on:
-  # release:
-  #   types: [published]
-
-  # TODO: Remove when done experimenting
-  push:
-    branches:
-      - task/publish-workflow
+  release:
+    types: [published]
 
 jobs:
   publish:
@@ -17,4 +12,11 @@ jobs:
       - uses: actions/checkout@v2
       - uses: dart-lang/setup-dart@v1
 
-      - run: dart pub publish --dry-run
+      - name: Authenticate with pub.dev
+        env:
+          PUB_CREDENTIALS_CONTENT: ${{ secrets.PUB_CREDENTIALS_CONTENT }}
+        run: |
+          mkdir -p ~/.config/dart
+          echo "$PUB_CREDENTIALS_CONTENT" > ~/.config/dart/pub-credentials.json
+      
+      - run: dart pub publish
