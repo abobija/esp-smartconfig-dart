@@ -26,9 +26,12 @@ The breaking change was implemented with 14.6. However, it seems to be the case 
 - After the Dev-Account has been approved, you have to make a request via this [form](https://developer.apple.com/contact/request/networking-multicast) to be allowed to use the Multicast Api.
 - Then you can follow this [guide](https://developer.apple.com/forums/thread/663271?answerId=639455022#639455022) (new process)
 
-## Demo video
+## Demo videos
 
-[![Demo YouTube video](https://img.youtube.com/vi/yjxtwQ8Xpuo/mqdefault.jpg)](https://youtu.be/yjxtwQ8Xpuo)
+| Console App | Flutter Mobile App |
+| --- | --- |
+| [![Demo Video - Console App](https://img.youtube.com/vi/yjxtwQ8Xpuo/mqdefault.jpg)](https://youtu.be/yjxtwQ8Xpuo) | [![Demo Video - Flutter Mobile App](https://img.youtube.com/vi/bE5uClhBgxM/mqdefault.jpg)](https://youtu.be/bE5uClhBgxM) |
+
 
 ## Example
 
@@ -46,7 +49,7 @@ provisioner.listen((response) {
 try {
     await provisioner.start(ProvisioningRequest.fromStrings(
         ssid: "NETWORK NAME",
-        bssid: "ROUTER BSSID",
+        bssid: "ROUTER BSSID", // Optional
         password: "NETWORK PASSWORD",
     ));
 
