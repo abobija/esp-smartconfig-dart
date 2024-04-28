@@ -1,0 +1,22 @@
+name: Publish package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dart-lang/setup-dart@v1
+
+      - name: Authenticate with pub.dev
+        env:
+          PUB_CREDENTIALS_CONTENT: ${{ secrets.PUB_CREDENTIALS_CONTENT }}
+        run: |
+          mkdir -p ~/.config/dart
+          echo "$PUB_CREDENTIALS_CONTENT" > ~/.config/dart/pub-credentials.json
+      
+      - run: dart pub publish
