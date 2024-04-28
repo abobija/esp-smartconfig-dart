@@ -18,7 +18,7 @@ void main() async {
   try {
     await provisioner.start(ProvisioningRequest.fromStrings(
       ssid: "Renault 1.9D",
-      bssid: "f8:d1:11:bf:28:5c",
+      bssid: "f8:d1:11:bf:28:5c", // optional
       password: "renault19",
     ));
 

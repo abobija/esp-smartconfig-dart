@@ -41,7 +41,7 @@ class ProvisioningRequest {
   /// [bssid] shoud be in format aa:bb:cc:dd:ee:ff
   factory ProvisioningRequest.fromStrings({
     required String ssid,
-    required String bssid,
+    String bssid = '00:00:00:00:00:00',
     String? password,
     String? reservedData,
     String? encryptionKey,
