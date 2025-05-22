@@ -110,22 +110,10 @@ class EspTouchV2 extends Protocol {
     _buffer = Int8List.fromList(dataTmp);
     dataTmp.clear();
 
-    logger.verbose("paddings "
-        "password=$_passwordPaddingLength, "
-        "reservedData=$_reservedDataPaddingLength");
-
-    logger.debug("buffer $_buffer");
-
     int reservedDataBeginPos =
         _headLength + _passwordLength + _passwordPaddingLength;
     int ssidBeginPos =
         reservedDataBeginPos + _reservedDataLength + _reservedDataPaddingLength;
-
-    logger.verbose(
-        "encoded (pass=$_isPasswordEncoded, data=$_isReservedDataEncoded, ssid=$_isSsidEncoded)");
-    logger.verbose(
-        "paddingFactors (pass=$_passwordPaddingFactor, data=$_reservedPaddingFactor, ssid=$_ssidPaddingFactor)");
-    logger.verbose("beginPos (data=$reservedDataBeginPos, ssid=$ssidBeginPos)");
 
     int offset = 0;
     int count = 0;
@@ -216,9 +204,6 @@ class EspTouchV2 extends Protocol {
 
   void _createBlocksFor6Bytes(
       Int8List buf, int sequence, int crc, bool tailIsCrc) {
-    logger.verbose(
-        "seq=$sequence, seqBuffer=$buf, crc=$crc, tailIsCrc=$tailIsCrc");
-
     if (sequence == -1) {
       // first sequence
       final syncBlock = _syncBlock();

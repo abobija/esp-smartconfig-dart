@@ -1,3 +1,9 @@
+## 3.0.0
+
+- Dropped `loggerx` package
+- Added official `logging` package
+- Upgraded other dependencies to the latest (major) versions
+
 ## 2.0.4
 
 - Added Flutter App Demo Video to the README

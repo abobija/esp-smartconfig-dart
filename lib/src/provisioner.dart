@@ -6,12 +6,12 @@ import 'package:esp_smartconfig/esp_smartconfig.dart';
 import 'package:esp_smartconfig/src/protocol.dart';
 import 'package:esp_smartconfig/src/protocols/esptouch.dart';
 import 'package:esp_smartconfig/src/protocols/esptouch_v2.dart';
-import 'package:loggerx/loggerx.dart';
-
-final _logger = Logger.findOrCreate('esp_smartconfig');
+import 'package:logging/logging.dart';
 
 /// Provisioner
 class Provisioner {
+  static final _logger = Logger("Provisioner");
+
   /// Protocol
   final Protocol _protocol;
 
@@ -62,36 +62,44 @@ class Provisioner {
     final completer = Completer<void>();
     final rPort = ReceivePort();
 
-    final worker =
-        _EspWorker(request: request, logger: _logger, protocol: _protocol);
+    final worker = _EspWorker(request: request, protocol: _protocol);
 
     rPort.listen((event) {
-      if (event is _EspWorkerEvent) {
-        switch (event.type) {
-          case _EspWorkerEventType.init:
-            (event.data as SendPort).send(worker);
-            break;
-          case _EspWorkerEventType.exception:
-            _logger.error(event.data);
+      if (event is! _EspWorkerEvent) {
+        _logger.warning("Event received from Isolate has incorrect type");
+      } else if (event is _EspWorkerInitEvent) {
+        event.sendPort.send(worker);
+      } else if (event is _EspWorkerProvisioningStartEvent) {
+        _logger.fine("${worker.protocol} povisioning");
+        _logger.finer("---------- Request ----------");
+        _logger.finer("ssid ${request.ssid}");
+        _logger.finer("bssid ${request.bssid}");
+        _logger.finer("pwd ${request.password}");
+        _logger.finer("rData ${request.reservedData}");
+        _logger.finer("encriptionKey ${request.encryptionKey}");
+        _logger.finer("-----------------------------");
+      } else if (event is _EspWorkerProvisioningStartedEvent) {
+        _logger.fine("Provisioning started");
+        _logger.finest("Blocks ${worker.protocol.blocks}");
+        completer.complete();
+      } else if (event is _EspWorkerResponseEvent) {
+        _logger.fine("Received response (${event.response}");
+        if (!_streamCtrl.isClosed) {
+          _streamCtrl.sink.add(event.response);
+        }
+      } else if (event is _EspWorkerErrorEvent) {
+        _logger.severe(event.message, event.error, event.stackTrace);
 
-            if (!completer.isCompleted) {
-              // failed to start provisioner
-              completer.completeError(event.data);
-            } else {
-              _streamCtrl.sink.addError(event.data);
+        final err = event.error ?? event.message ?? "ProvisioningError";
 
-              // stop provisioning on any runtime error
-              stop();
-            }
-            break;
-          case _EspWorkerEventType.started:
-            _logger.info("Provisioning started");
-            completer.complete();
-            break;
-          case _EspWorkerEventType.response:
-            _logger.info("Received response (${event.data}");
-            if (!_streamCtrl.isClosed) _streamCtrl.sink.add(event.data);
-            break;
+        if (!completer.isCompleted) {
+          // failed to start provisioner
+          completer.completeError(err, event.stackTrace);
+        } else {
+          _streamCtrl.sink.addError(err, event.stackTrace);
+
+          // stop provisioning on any runtime error
+          stop();
         }
       } else {
         _logger.warning("Unhandled message from isolate: $event");
@@ -111,23 +119,14 @@ class Provisioner {
       }
     });
 
-    sPort.send(_EspWorkerEvent.init(rPort.sendPort));
+    sPort.send(_EspWorkerInitEvent(rPort.sendPort));
   }
 
   static void _startProvisioning(_EspWorker worker, SendPort sPort) async {
+    sPort.send(_EspWorkerProvisioningStartEvent());
+
     final request = worker.request;
-    final logger = worker.logger;
     final protocol = worker.protocol;
-
-    logger.debug("$protocol povisioning");
-
-    logger.debug("---------- Request ----------");
-    logger.debug("ssid ${request.ssid}");
-    logger.debug("bssid ${request.bssid}");
-    logger.debug("pwd ${request.password}");
-    logger.debug("rData ${request.reservedData}");
-    logger.debug("encriptionKey ${request.encryptionKey}");
-    logger.debug("-----------------------------");
 
     int p = 0;
     RawDatagramSocket? socket;
@@ -135,8 +134,6 @@ class Provisioner {
     final ports = protocol.ports;
     for (; p < ports.length; p++) {
       try {
-        logger.debug("Creating UDP socket on port ${ports[p]}");
-
         socket = await RawDatagramSocket.bind(
           InternetAddress.anyIPv4,
           ports[p],
@@ -166,43 +163,39 @@ class Provisioner {
               }
 
               protocol.addResponse(response);
-              sPort.send(_EspWorkerEvent.result(response));
-            } catch (e) {
-              sPort.send(_EspWorkerEvent.exception("Invalid response: $e"));
+              sPort.send(_EspWorkerResponseEvent(response));
+            } catch (err, st) {
+              sPort.send(_EspWorkerErrorEvent("Invalid response", err, st));
             }
           },
-          onError: (err, s) {
-            logger.error("Socket error", err, s);
-            sPort.send(_EspWorkerEvent.exception("Socket error: $err"));
+          onError: (err, st) {
+            sPort.send(_EspWorkerErrorEvent("Socket error", err, st));
           },
           cancelOnError: true,
         );
 
-        logger.debug("UDP socket on port ${ports[p]} successfully created");
         break;
-      } catch (e) {
-        sPort.send(_EspWorkerEvent.exception("UDP port bind failed: $e"));
+      } catch (err, st) {
+        sPort.send(_EspWorkerErrorEvent("UDP port bind failed", err, st));
       }
     }
 
     if (socket == null) {
-      sPort.send(_EspWorkerEvent.exception("Create UDP socket failed"));
+      sPort.send(_EspWorkerErrorEvent("Create UDP socket failed"));
       return;
     }
 
     // Install and prepare protocol
     protocol
-      ..install(socket, p, request, logger)
+      ..install(socket, p, request)
       ..prepare();
-
-    logger.verbose("blocks ${protocol.blocks}");
 
     // Protocol loop function execution in short time intervals
     final tmrDuration = Duration(milliseconds: 5);
     Timer.periodic(
         tmrDuration, (t) => protocol.loop(tmrDuration.inMilliseconds, t));
 
-    sPort.send(_EspWorkerEvent.started());
+    sPort.send(_EspWorkerProvisioningStartedEvent());
   }
 
   /// Stop provisioning that is previously started with [start] method
@@ -212,56 +205,47 @@ class Provisioner {
     }
 
     if (running) {
-      _logger.debug("Destroying isolate");
+      _logger.finer("Destroying isolate");
       _isolate!.kill(priority: Isolate.immediate);
       _isolate = null;
     }
 
-    _logger.info("Provisioning stopped");
+    _logger.fine("Provisioning stopped");
   }
 }
 
 class _EspWorker {
   final ProvisioningRequest request;
-  final Logger logger;
   final Protocol protocol;
 
   const _EspWorker({
     required this.request,
-    required this.logger,
     required this.protocol,
   });
 }
 
-enum _EspWorkerEventType {
-  init,
-  exception,
-  started,
-  response,
+abstract class _EspWorkerEvent {}
+
+class _EspWorkerInitEvent extends _EspWorkerEvent {
+  final SendPort sendPort;
+
+  _EspWorkerInitEvent(this.sendPort);
 }
 
-class _EspWorkerEvent {
-  final _EspWorkerEventType type;
-  final dynamic data;
+class _EspWorkerProvisioningStartEvent extends _EspWorkerEvent {}
 
-  const _EspWorkerEvent(this.type, [this.data]);
+class _EspWorkerProvisioningStartedEvent extends _EspWorkerEvent {}
 
-  factory _EspWorkerEvent.init(SendPort port) {
-    return _EspWorkerEvent(_EspWorkerEventType.init, port);
-  }
+class _EspWorkerResponseEvent extends _EspWorkerEvent {
+  final ProvisioningResponse response;
 
-  factory _EspWorkerEvent.exception(
-    String message,
-  ) {
-    return _EspWorkerEvent(
-        _EspWorkerEventType.exception, ProvisioningException(message));
-  }
+  _EspWorkerResponseEvent(this.response);
+}
 
-  factory _EspWorkerEvent.started() {
-    return _EspWorkerEvent(_EspWorkerEventType.started);
-  }
+class _EspWorkerErrorEvent extends _EspWorkerEvent {
+  final Object? message;
+  final Object? error;
+  final StackTrace? stackTrace;
 
-  factory _EspWorkerEvent.result(ProvisioningResponse result) {
-    return _EspWorkerEvent(_EspWorkerEventType.response, result);
-  }
+  _EspWorkerErrorEvent(this.message, [this.error, this.stackTrace]);
 }
