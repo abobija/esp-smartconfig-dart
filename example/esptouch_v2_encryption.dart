@@ -1,15 +1,18 @@
 import 'dart:io';
 
 import 'package:esp_smartconfig/esp_smartconfig.dart';
-import 'package:loggerx/loggerx.dart';
+import 'package:logging/logging.dart';
 
 void main() async {
-  logging.level = LogLevel.debug;
+  Logger.root.level = Level.FINER;
+  Logger.root.onRecord.listen((record) {
+    print('[${record.level.name}] ${record.message}');
+  });
 
   final provisioner = Provisioner.espTouchV2();
 
   provisioner.listen((response) {
-    log.info("\n"
+    Logger.root.info("\n"
         "\n---------------------------------------------------------\n"
         "Device ($response) is connected to WiFi!"
         "\n---------------------------------------------------------\n");
@@ -23,9 +26,9 @@ void main() async {
       encryptionKey: "MySecretKey!6754",
     ));
 
-    await Future.delayed(Duration(seconds: 5));
+    await Future.delayed(Duration(seconds: 10));
   } catch (e, s) {
-    log.error(e, s);
+    Logger.root.shout("Error", e, s);
   }
 
   provisioner.stop();

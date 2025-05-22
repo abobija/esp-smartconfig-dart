@@ -8,7 +8,6 @@ import 'package:esp_smartconfig/src/crc.dart';
 import 'package:esp_smartconfig/src/provisioning_request.dart';
 import 'package:esp_smartconfig/src/provisioning_response.dart';
 import 'package:esp_smartconfig/src/exceptions.dart';
-import 'package:loggerx/loggerx.dart';
 
 /// Provisioning protocol
 abstract class Protocol {
@@ -33,9 +32,6 @@ abstract class Protocol {
 
   /// Protocol bottlenecker
   final bottleneck = Bottleneck(15);
-
-  /// Logger
-  late final Logger logger;
 
   /// List of the protocol [ports].
   /// Provisioner will take one port after the another and try to open it.
@@ -81,12 +77,11 @@ abstract class Protocol {
   }
 
   /// Protocol installation
-  void install(RawDatagramSocket socket, int portIndex,
-      ProvisioningRequest request, Logger logger) {
+  void install(RawDatagramSocket socket, int portIndex, 
+    ProvisioningRequest request) {
     _socket = socket;
     this.portIndex = portIndex;
     this.request = request;
-    this.logger = logger;
   }
 
   /// Prepare package, set variables, etc...
