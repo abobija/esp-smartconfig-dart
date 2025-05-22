@@ -1,5 +1,5 @@
 /// Implementation of Espressif's SmartConfig protocols
-library esp_smartconfig;
+library;
 
 export 'src/provisioner.dart';
 export 'src/provisioning_request.dart';
