@@ -77,8 +77,8 @@ abstract class Protocol {
   }
 
   /// Protocol installation
-  void install(RawDatagramSocket socket, int portIndex, 
-    ProvisioningRequest request) {
+  void install(
+      RawDatagramSocket socket, int portIndex, ProvisioningRequest request) {
     _socket = socket;
     this.portIndex = portIndex;
     this.request = request;

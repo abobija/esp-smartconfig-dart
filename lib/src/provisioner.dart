@@ -62,18 +62,14 @@ class Provisioner {
     final completer = Completer<void>();
     final rPort = ReceivePort();
 
-    final worker =
-        _EspWorker(request: request, protocol: _protocol);
+    final worker = _EspWorker(request: request, protocol: _protocol);
 
     rPort.listen((event) {
-      if(event is! _EspWorkerEvent) {
-        _logger.warning(
-          "Event received from Isolate has incorrect type");
-      }
-      else if(event is _EspWorkerInitEvent) {
+      if (event is! _EspWorkerEvent) {
+        _logger.warning("Event received from Isolate has incorrect type");
+      } else if (event is _EspWorkerInitEvent) {
         event.sendPort.send(worker);
-      }
-      else if(event is _EspWorkerProvisioningStartEvent) {
+      } else if (event is _EspWorkerProvisioningStartEvent) {
         _logger.fine("${worker.protocol} povisioning");
         _logger.finer("---------- Request ----------");
         _logger.finer("ssid ${request.ssid}");
@@ -82,34 +78,30 @@ class Provisioner {
         _logger.finer("rData ${request.reservedData}");
         _logger.finer("encriptionKey ${request.encryptionKey}");
         _logger.finer("-----------------------------");
-      }
-      else if(event is _EspWorkerProvisioningStartedEvent) {
+      } else if (event is _EspWorkerProvisioningStartedEvent) {
         _logger.fine("Provisioning started");
         _logger.finest("Blocks ${worker.protocol.blocks}");
         completer.complete();
-      }
-      else if(event is _EspWorkerResponseEvent) {
+      } else if (event is _EspWorkerResponseEvent) {
         _logger.fine("Received response (${event.response}");
         if (!_streamCtrl.isClosed) {
           _streamCtrl.sink.add(event.response);
         }
-      }
-      else if(event is _EspWorkerErrorEvent) {
+      } else if (event is _EspWorkerErrorEvent) {
         _logger.severe(event.message, event.error, event.stackTrace);
 
         final err = event.error ?? event.message ?? "ProvisioningError";
 
         if (!completer.isCompleted) {
-            // failed to start provisioner
-            completer.completeError(err, event.stackTrace);
-          } else {
-            _streamCtrl.sink.addError(err, event.stackTrace);
+          // failed to start provisioner
+          completer.completeError(err, event.stackTrace);
+        } else {
+          _streamCtrl.sink.addError(err, event.stackTrace);
 
-            // stop provisioning on any runtime error
-            stop();
-          }
-      }
-      else {
+          // stop provisioning on any runtime error
+          stop();
+        }
+      } else {
         _logger.warning("Unhandled message from isolate: $event");
       }
     });
@@ -232,7 +224,7 @@ class _EspWorker {
   });
 }
 
-abstract class _EspWorkerEvent { }
+abstract class _EspWorkerEvent {}
 
 class _EspWorkerInitEvent extends _EspWorkerEvent {
   final SendPort sendPort;
@@ -240,9 +232,9 @@ class _EspWorkerInitEvent extends _EspWorkerEvent {
   _EspWorkerInitEvent(this.sendPort);
 }
 
-class _EspWorkerProvisioningStartEvent extends _EspWorkerEvent { }
+class _EspWorkerProvisioningStartEvent extends _EspWorkerEvent {}
 
-class _EspWorkerProvisioningStartedEvent extends _EspWorkerEvent { }
+class _EspWorkerProvisioningStartedEvent extends _EspWorkerEvent {}
 
 class _EspWorkerResponseEvent extends _EspWorkerEvent {
   final ProvisioningResponse response;

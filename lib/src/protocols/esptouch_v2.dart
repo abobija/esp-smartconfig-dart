@@ -204,7 +204,6 @@ class EspTouchV2 extends Protocol {
 
   void _createBlocksFor6Bytes(
       Int8List buf, int sequence, int crc, bool tailIsCrc) {
-
     if (sequence == -1) {
       // first sequence
       final syncBlock = _syncBlock();
